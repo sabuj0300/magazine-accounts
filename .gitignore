@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+subscribers.db
+*.db
+tmp_imports/
+import_bad_rows.csv
+import_orphan_payments.csv
+*.mdb
+*.zip
+.env

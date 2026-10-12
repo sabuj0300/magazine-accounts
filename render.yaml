@@ -1,0 +1,28 @@
+# Render "Blueprint": creates the database and the web site together.
+databases:
+  - name: magazine-db
+    plan: basic-256mb          # about $6 / month (Render PostgreSQL)
+    databaseName: magazine
+    user: magazine
+
+services:
+  - type: web
+    name: magazine-accounts
+    runtime: python
+    plan: starter              # about $7 / month; use "free" to try it first (it sleeps when idle)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -c "import db, app; db.init_db(); app.ensure_admin()" && waitress-serve --host=0.0.0.0 --port=$PORT app:app
+    healthCheckPath: /login
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: magazine-db
+          property: connectionString
+      - key: ADMIN_USERNAME
+        sync: false            # you type it in the Render screen
+      - key: ADMIN_PASSWORD
+        sync: false
