@@ -25,6 +25,8 @@ PER_PAGE = 50
 ROUND_TO = 1            # "amount to pay" is rounded UP to a multiple of this (1 = whole Taka, 5 = nearest 5 Taka)
 # Can a local Jama'at user record new payments? (False = only the central admin records money)
 JAMAAT_USERS_CAN_ADD_PAYMENTS = True
+SINGLE_DEVICE_LOGIN = True      # a user can be signed in on ONE device at a time
+IDLE_MINUTES = 30               # no activity for this long -> signed out, and another device may log in
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-before-going-live")
@@ -106,20 +108,56 @@ def renewal_quote(expiry, extra_years=0):
 
 
 # ------------------------------------------------------------------ users / permissions
+def now_bd():
+    return datetime.now(timezone(timedelta(hours=6))).replace(tzinfo=None)
+
+
+def _seen_ago(ts):
+    """Minutes since the 'YYYY-MM-DD HH:MM:SS' time stamp (None if missing)."""
+    try:
+        return (now_bd() - datetime.strptime(ts[:19], "%Y-%m-%d %H:%M:%S")).total_seconds() / 60
+    except (TypeError, ValueError):
+        return None
+
+
 @app.before_request
 def load_user():
     g.user = None
     uid = session.get("uid")
-    if uid:
-        g.user = db.get_db().execute(
-            """SELECT u.id, u.username, u.role, u.jamaat_id, j.name AS jamaat
-               FROM users u LEFT JOIN jamaats j ON j.id = u.jamaat_id WHERE u.id=?""",
-            (uid,)).fetchone()
-        if g.user is None:
+    if not uid:
+        return
+    con = db.get_db()
+    u = con.execute(
+        """SELECT u.id, u.username, u.role, u.jamaat_id, u.session_token, u.last_seen, j.name AS jamaat
+           FROM users u LEFT JOIN jamaats j ON j.id = u.jamaat_id WHERE u.id=?""", (uid,)).fetchone()
+    if u is None:
+        session.clear()
+        return
+    if SINGLE_DEVICE_LOGIN:
+        idle = _seen_ago(u["last_seen"])
+        if not u["session_token"] or session.get("tok") != u["session_token"]:
             session.clear()
+            flash("You were signed out: this user logged in on another device (or was signed out by the office).",
+                  "warning")
+            return
+        if idle is not None and idle > IDLE_MINUTES:
+            session.clear()
+            flash(f"Signed out after {IDLE_MINUTES} minutes without activity. Please log in again.", "warning")
+            return
+        if idle is None or idle >= 1:                       # remember activity (at most once a minute)
+            con.execute("UPDATE users SET last_seen=? WHERE id=?",
+                        (now_bd().strftime("%Y-%m-%d %H:%M:%S"), u["id"]))
+            con.commit()
+    g.user = u
 
 
 def is_admin():
+    """Full access to all Jama'ats and all data: central Admin and Manager."""
+    return bool(g.get("user") and g.user["role"] in ("admin", "manager"))
+
+
+def is_superadmin():
+    """Only the central Admin can create users and reset passwords."""
     return bool(g.get("user") and g.user["role"] == "admin")
 
 
@@ -142,6 +180,17 @@ def admin_required(f):
         if g.user is None:
             return redirect(url_for("login", next=request.path))
         if not is_admin():
+            abort(403)
+        return f(*a, **k)
+    return w
+
+
+def superadmin_required(f):
+    @wraps(f)
+    def w(*a, **k):
+        if g.user is None:
+            return redirect(url_for("login", next=request.path))
+        if not is_superadmin():
             abort(403)
         return f(*a, **k)
     return w
@@ -216,7 +265,7 @@ def page_url(n):
 @app.context_processor
 def inject():
     return dict(fy_label=fy_label, FEE=FEE_PER_YEAR, today=today().isoformat(),
-                current_fy=fy_of(today()), user=g.get("user"), is_admin=is_admin(),
+                current_fy=fy_of(today()), user=g.get("user"), is_admin=is_admin(), is_superadmin=is_superadmin(),
                 can_pay=can_pay(), sort_url=sort_url, sort_mark=sort_mark, page_url=page_url,
                 sort_labels=SORT_LABELS)
 
@@ -272,19 +321,37 @@ def jam_filter_value():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        u = db.get_db().execute("SELECT * FROM users WHERE lower(username)=lower(?)",
-                                (request.form["username"].strip(),)).fetchone()
+        con = db.get_db()
+        u = con.execute("SELECT * FROM users WHERE lower(username)=lower(?)",
+                        (request.form["username"].strip(),)).fetchone()
         if u and check_password_hash(u["password_hash"], request.form["password"]):
+            dev = request.cookies.get("device_id") or secrets.token_hex(16)   # this browser's permanent id
+            if (SINGLE_DEVICE_LOGIN and u["session_token"] and u["device_id"] != dev
+                    and (_seen_ago(u["last_seen"]) or 0) <= IDLE_MINUTES):
+                flash("This user is already logged in on another device. Log out there first, wait "
+                      f"{IDLE_MINUTES} minutes, or ask the central office to sign that device out.", "danger")
+                return render_template("login.html")
+            token = secrets.token_hex(16)
+            con.execute("UPDATE users SET session_token=?, device_id=?, last_seen=? WHERE id=?",
+                        (token, dev, now_bd().strftime("%Y-%m-%d %H:%M:%S"), u["id"]))
+            con.commit()
             session.clear()
-            session["uid"] = u["id"]
+            session["uid"], session["tok"] = u["id"], token
             nxt = request.args.get("next") or url_for("dashboard")
-            return redirect(nxt if nxt.startswith("/") else url_for("dashboard"))
+            resp = redirect(nxt if nxt.startswith("/") else url_for("dashboard"))
+            resp.set_cookie("device_id", dev, max_age=365 * 86400, httponly=True, samesite="Lax",
+                            secure=bool(os.environ.get("RENDER")))
+            return resp
         flash("Wrong username or password.", "danger")
     return render_template("login.html")
 
 
 @app.route("/logout")
 def logout():
+    if g.get("user") is not None:
+        con = db.get_db()
+        con.execute("UPDATE users SET session_token=NULL WHERE id=?", (g.user["id"],))
+        con.commit()
     session.clear()
     return redirect(url_for("login"))
 
@@ -313,7 +380,7 @@ def account_password():
 
 # ------------------------------------------------------------------ user management (admin)
 @app.route("/users", methods=["GET", "POST"])
-@admin_required
+@superadmin_required
 def users_page():
     con = db.get_db()
     if request.method == "POST":
@@ -326,7 +393,7 @@ def users_page():
             err = "Username is required."
         elif len(pw) < 6:
             err = "Password must be at least 6 characters."
-        elif role not in ("admin", "jamaat"):
+        elif role not in ("admin", "manager", "jamaat"):
             err = "Choose a role."
         elif role == "jamaat" and not (jam.isdigit() and con.execute(
                 "SELECT 1 FROM jamaats WHERE id=?", (int(jam),)).fetchone()):
@@ -342,14 +409,16 @@ def users_page():
             flash(f"User '{username}' created.", "success")
         return redirect(url_for("users_page"))
     users = con.execute(
-        """SELECT u.id, u.username, u.role, j.name AS jamaat FROM users u
+        """SELECT u.id, u.username, u.role, u.session_token, u.last_seen, j.name AS jamaat FROM users u
            LEFT JOIN jamaats j ON j.id=u.jamaat_id ORDER BY u.role, j.name, u.username""").fetchall()
-    return render_template("users.html", users=users,
+    online = {u["id"] for u in users if u["session_token"] and (_seen_ago(u["last_seen"]) is not None)
+              and _seen_ago(u["last_seen"]) <= IDLE_MINUTES}
+    return render_template("users.html", users=users, online=online, idle=IDLE_MINUTES,
                            jamaats=con.execute("SELECT id,name FROM jamaats ORDER BY name").fetchall())
 
 
 @app.route("/users/<int:uid>/password", methods=["POST"])
-@admin_required
+@superadmin_required
 def user_password(uid):
     pw = request.form.get("new_password", "")
     if len(pw) < 6:
@@ -362,8 +431,18 @@ def user_password(uid):
     return redirect(url_for("users_page"))
 
 
+@app.route("/users/<int:uid>/signout", methods=["POST"])
+@superadmin_required
+def user_signout(uid):
+    con = db.get_db()
+    con.execute("UPDATE users SET session_token=NULL, device_id=NULL WHERE id=?", (uid,))
+    con.commit()
+    flash("That user was signed out from the device they were using.", "success")
+    return redirect(url_for("users_page"))
+
+
 @app.route("/users/<int:uid>/delete", methods=["POST"])
-@admin_required
+@superadmin_required
 def user_delete(uid):
     con = db.get_db()
     u = con.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
@@ -1335,7 +1414,7 @@ def cli_init():
 
 @app.cli.command("create-user")
 @click.argument("username")
-@click.option("--role", type=click.Choice(["admin", "jamaat"]), default="admin", show_default=True)
+@click.option("--role", type=click.Choice(["admin", "manager", "jamaat"]), default="admin", show_default=True)
 @click.option("--jamaat", "jamaat_name", default=None, help="Jama'at name (required for role jamaat)")
 @click.password_option()
 def cli_user(username, role, jamaat_name, password):
@@ -1354,6 +1433,16 @@ def cli_user(username, role, jamaat_name, password):
                 (username, generate_password_hash(password), role, jid))
     con.commit()
     click.echo(f"User '{username}' saved.")
+
+
+@app.cli.command("release-user")
+@click.argument("username")
+def cli_release(username):
+    """Sign a user out of the device he is logged in on (use if someone is locked out)."""
+    con = db.connect()
+    con.execute("UPDATE users SET session_token=NULL, device_id=NULL WHERE lower(username)=lower(?)", (username,))
+    con.commit()
+    click.echo(f"'{username}' can log in again.")
 
 
 @app.cli.command("import-access")
