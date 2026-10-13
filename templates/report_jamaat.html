@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sort_select with context %}
+{% block title %}Jama'at-wise report{% endblock %}
+{% block body %}
+<h1>Jama'at-wise subscriber list <span class="mut" style="font-size:15px">({{ total }})</span></h1>
+<form class="filters">
+  {% if is_admin %}
+  <div><label>Jama'at</label><select name="jamaat"><option value="">All Jama'ats</option><option value="none" {{ 'selected' if jam=='none' }}>(No Jama'at)</option>
+    {% for j in jamaats %}<option value="{{ j.id }}" {{ 'selected' if jam==j.id|string }}>{{ j.name }}</option>{% endfor %}</select></div>
+  {% endif %}
+  <div><label>Status</label><select name="status">
+    <option value="">All</option><option value="current" {{ 'selected' if status=='current' }}>Current (valid)</option>
+    <option {{ 'selected' if status=='Expired' }}>Expired</option><option {{ 'selected' if status=='No payment' }}>No payment</option><option {{ 'selected' if status=='Inactive' }}>Inactive</option></select></div>
+  {{ sort_select(sort, dir) }}
+  <button class="btn">Show</button>
+  <a class="btn sec" href="{{ url_for('report_jamaat', jamaat=jam, status=status, sort=sort, dir=dir, format='xlsx') }}">Download Excel</a>
+  <a class="btn sec" href="#" onclick="window.print();return false">Print</a>
+</form>
+<p class="mut noprint" style="margin-top:-6px">Members are grouped by Jama'at; the sorting is applied inside each Jama'at (choose "Jama'at" to reverse the order of the groups).</p>
+<div class="wrap"><table>
+<tr><th><a href="{{ sort_url('id') }}">ID{{ sort_mark('id') }}</a></th><th><a href="{{ sort_url('local') }}">Local ID{{ sort_mark('local') }}</a></th>
+<th><a href="{{ sort_url('name') }}">Name{{ sort_mark('name') }}</a></th><th>Father's name</th><th>Mobile</th><th>Delivery</th><th>Status</th>
+<th><a href="{{ sort_url('expiry') }}">Expiry date{{ sort_mark('expiry') }}</a></th><th class="n">Total paid</th></tr>
+{% for g, rs in groups.items() %}
+<tr class="grp"><td colspan="9">{{ g }} — {{ rs|length }} subscriber{{ 's' if rs|length!=1 }}</td></tr>
+{% for r in rs %}
+<tr><td>{{ r.id }}</td><td>{{ r.local_id or '' }}</td><td><a href="{{ url_for('subscriber_view', sid=r.id) }}">{{ r.name }}</a></td><td>{{ r.father_name or '' }}</td>
+<td>{{ r.mobile or '' }}</td><td>{{ 'By hand' if r.by_hand else 'Post' }}</td>
+<td><span class="tag {{ r.status }}">{{ r.status }}</span></td><td>{{ r.expiry|dmy }}</td><td class="n">{{ r.total_paid|money }}</td></tr>
+{% endfor %}{% else %}<tr><td colspan="9" class="mut">Nothing found.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

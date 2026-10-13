@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Subscribers{% endblock %} – Magazine Accounts</title>
+<style>
+:root{--g:#1f6f43;--g2:#e8f3ec;--line:#d9dee3;--bg:#f6f8f7;--txt:#1d2733;--mut:#66727f;--red:#b3261e;--amb:#8a5a00}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--txt)}
+header.top{background:var(--g);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header.top .brand{font-weight:700;font-size:17px}
+header.top .sp{flex:1}
+header.top .who{font-size:13px;background:rgba(255,255,255,.16);padding:4px 12px;border-radius:99px}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;max-width:1500px;margin:0 auto;padding:18px 16px;align-items:start}
+main{min-width:0}
+main.solo{max-width:1200px;margin:22px auto;padding:0 16px}
+aside.side{position:sticky;top:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+aside.side h4{margin:12px 12px 4px;font-size:11px;text-transform:uppercase;color:var(--mut);letter-spacing:.06em}
+aside.side h4:first-child{margin-top:6px}
+aside.side a{display:block;padding:9px 12px;border-radius:7px;color:var(--txt);text-decoration:none}
+aside.side a:hover{background:var(--bg)}
+aside.side a.on{background:var(--g2);color:var(--g);font-weight:600}
+h1{font-size:22px;margin:0 0 14px} h2{font-size:17px;margin:22px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat b{display:block;font-size:26px} .stat span{color:var(--mut);font-size:13px}
+table{border-collapse:collapse;width:100%;background:#fff}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--g2);font-size:13px;white-space:nowrap} td.n,th.n{text-align:right}
+th a{color:inherit;text-decoration:none} th a:hover{text-decoration:underline}
+tr:hover td{background:#fbfcfb}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+form.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+input,select,textarea{font:inherit;padding:7px 9px;border:1px solid #bfc7ce;border-radius:7px;background:#fff;max-width:100%}
+input[readonly]{background:#f0f2f3}
+textarea{width:100%}
+.btn{display:inline-block;background:var(--g);color:#fff;border:0;border-radius:7px;padding:8px 14px;cursor:pointer;text-decoration:none;font:inherit}
+.btn.sec{background:#fff;color:var(--g);border:1px solid var(--g)} .btn.red{background:var(--red)}
+.btn.sm{padding:3px 9px;font-size:13px}
+.flash{padding:10px 14px;border-radius:8px;margin-bottom:12px}
+.flash.success{background:#e3f4e8;color:#14532d}.flash.danger{background:#fde8e6;color:var(--red)}.flash.warning{background:#fff3d6;color:var(--amb)}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.Valid{background:#dff3e6;color:#14532d}.Expired{background:#fde8e6;color:var(--red)}.Inactive{background:#e8eaed;color:#555}.No\ payment{background:#fff3d6;color:var(--amb)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.mut{color:var(--mut)} .right{text-align:right} .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.pager a{margin-right:6px} .grp td{background:var(--g2);font-weight:700}
+@media(max-width:860px){.layout{grid-template-columns:1fr}aside.side{order:-1;position:static}}
+@media print{header.top,aside.side,.noprint,form.filters{display:none!important}body{background:#fff}.layout{display:block;padding:0}.wrap{border:0}}
+</style>
+</head>
+<body>
+{% if user %}
+<header class="top noprint">
+  <span class="brand">📖 Magazine Accounts</span>
+  <span class="sp"></span>
+  <span class="who">{{ user.username }} · {{ 'Admin (all Jama\'ats)' if is_admin else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at' }}</span>
+</header>
+<div class="layout">
+<aside class="side noprint">
+  {% set ep = request.endpoint %}
+  <h4>Main</h4>
+  <a href="{{ url_for('dashboard') }}" class="{{ 'on' if ep=='dashboard' }}">🏠 Dashboard</a>
+  <a href="{{ url_for('subscribers') }}" class="{{ 'on' if ep in ('subscribers','subscriber_view','subscriber_edit','payment_new','payment_edit') }}">👥 Subscribers</a>
+  <a href="{{ url_for('subscriber_new') }}" class="{{ 'on' if ep=='subscriber_new' }}">➕ New subscriber</a>
+  <h4>Reports</h4>
+  <a href="{{ url_for('report_jamaat') }}" class="{{ 'on' if ep=='report_jamaat' }}">📋 Jama'at-wise list</a>
+  <a href="{{ url_for('report_postal') }}" class="{{ 'on' if ep=='report_postal' }}">✉️ Postal addresses</a>
+  <a href="{{ url_for('report_expiry') }}" class="{{ 'on' if ep=='report_expiry' }}">⏰ Expiry &amp; renewal</a>
+  <a href="{{ url_for('report_yearly') }}" class="{{ 'on' if ep=='report_yearly' }}">📅 Yearly (Jul–Jun)</a>
+  {% if is_admin %}<h4>Admin</h4>
+  <a href="{{ url_for('import_page', kind='subscribers') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='subscribers' }}">📥 Import subscribers</a>
+  <a href="{{ url_for('import_page', kind='payments') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='payments' }}">📥 Import payments</a>
+  <a href="{{ url_for('users_page') }}" class="{{ 'on' if ep=='users_page' }}">🔑 Users</a>{% endif %}
+  <h4>Account</h4>
+  <a href="{{ url_for('account_password') }}" class="{{ 'on' if ep=='account_password' }}">Change password</a>
+  <a href="{{ url_for('logout') }}">Logout</a>
+</aside>
+<main>
+{% for cat,msg in get_flashed_messages(with_categories=true) %}<div class="flash {{cat}}">{{ msg }}</div>{% endfor %}
+{% block body %}{% endblock %}
+</main>
+</div>
+{% else %}
+<main class="solo">
+{% for cat,msg in get_flashed_messages(with_categories=true) %}<div class="flash {{cat}}">{{ msg }}</div>{% endfor %}
+{% block solo %}{% block login %}{% endblock %}{% endblock %}
+</main>
+{% endif %}
+</body>
+</html>

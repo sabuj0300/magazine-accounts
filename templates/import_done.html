@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Import finished{% endblock %}
+{% block body %}
+<h1>Import finished</h1>
+<div class="card"><p><b>{{ result.ok }}</b> {{ spec.label }} added{% if result.amount is defined %} (total {{ result.amount|money }}){% endif %}.
+{% if result.skipped %} <b>{{ result.skipped }}</b> blocked rows were not saved.{% endif %}</p>
+<a class="btn" href="{{ url_for('subscribers') }}">Subscribers</a>
+<a class="btn sec" href="{{ url_for('import_page', kind=kind) }}">Import another file</a></div>
+{% endblock %}

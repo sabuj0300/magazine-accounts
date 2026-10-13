@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Postal addresses{% endblock %}
+{% block body %}
+<style>
+.sheet{background:#fff;border:1px solid var(--line);border-radius:6px;margin:0 auto 18px;width:210mm;height:297mm;padding:9mm 10mm;
+  display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row;gap:3mm 4mm;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
+.lbl{border:1px dashed #9aa5ae;border-radius:3mm;padding:3.5mm 5mm;overflow:hidden;display:flex;flex-direction:column;justify-content:center;line-height:1.35}
+.lbl .nm{font-size:13.5pt;font-weight:700}
+.lbl .jm{font-size:10.5pt;color:#1f6f43;font-weight:600;margin-bottom:1mm}
+.lbl .ad{font-size:11pt;white-space:pre-line}
+.lbl .ad.none{color:#b3261e;font-style:italic}
+.pgno{position:relative}
+.scroller{overflow-x:auto}
+@media print{
+  @page{size:A4;margin:0}
+  .sheet{border:0;box-shadow:none;margin:0;border-radius:0;page-break-after:always;break-after:page}
+  .sheet:last-child{page-break-after:auto;break-after:auto}
+  .lbl{border-color:#bbb}
+  main{padding:0}
+}
+</style>
+<h1 class="noprint">Postal addresses <span class="mut" style="font-size:15px">({{ total }} subscribers · {{ pages|length }} page{{ 's' if pages|length!=1 }})</span></h1>
+<form class="filters noprint">
+  {% if is_admin %}
+  <div><label>Jama'at</label><select name="jamaat"><option value="">All Jama'ats</option><option value="none" {{ 'selected' if jam=='none' }}>(No Jama'at)</option>
+    {% for j in jamaats %}<option value="{{ j.id }}" {{ 'selected' if jam==j.id|string }}>{{ j.name }}</option>{% endfor %}</select></div>
+  {% endif %}
+  <div><label>Status</label><select name="status">
+    <option value="current" {{ 'selected' if status=='current' }}>Current (valid)</option>
+    <option value="" {{ 'selected' if status=='' }}>All</option>
+    {% for s in ['Expired','No payment','Inactive'] %}<option {{ 'selected' if status==s }}>{{ s }}</option>{% endfor %}</select></div>
+  <div><label>Delivery</label><select name="delivery">
+    <option value="post" {{ 'selected' if delivery=='post' }}>Post only</option>
+    <option value="hand" {{ 'selected' if delivery=='hand' }}>By hand only</option>
+    <option value="all" {{ 'selected' if delivery=='all' }}>All</option></select></div>
+  <div><label>Addresses per A4 page</label><select name="per">
+    {% for n in (12,14,16) %}<option value="{{ n }}" {{ 'selected' if per==n }}>{{ n }}</option>{% endfor %}</select></div>
+  <button class="btn">Show</button>
+  <a class="btn sec" href="{{ url_for('report_postal', jamaat=jam, status=status, delivery=delivery, per=per, format='xlsx') }}">Download Excel</a>
+  <a class="btn" href="#" onclick="window.print();return false">🖨 Print</a>
+</form>
+{% if missing %}<div class="flash warning noprint">{{ missing }} subscriber{{ 's have' if missing!=1 else ' has' }} no address (shown in red).</div>{% endif %}
+<p class="mut noprint">Sorted by Jama'at, then name. When printing choose paper size A4, scale 100% (Default) and Margins "None".</p>
+<div class="scroller">
+{% for pg in pages %}
+<div class="sheet" style="grid-template-rows:repeat({{ rows_per_col }},1fr)">
+  {% for r in pg %}
+  <div class="lbl"><div class="nm">{{ r.name }}</div><div class="jm">{{ r.jamaat or '' }}</div>
+    {% if r.address %}<div class="ad">{{ r.address }}</div>{% else %}<div class="ad none">(address missing)</div>{% endif %}</div>
+  {% endfor %}
+</div>
+{% else %}<p class="mut">No subscribers found.</p>{% endfor %}
+</div>
+{% endblock %}

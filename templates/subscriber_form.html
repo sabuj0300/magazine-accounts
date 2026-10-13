@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ 'New subscriber' if new else 'Edit subscriber' }}{% endblock %}
+{% block body %}
+<h1>{{ 'New subscriber' if new else 'Edit subscriber #' ~ s.id }}</h1>
+<form method="post" class="card">
+<div class="row">
+  <div><label>Name *</label><input name="name" value="{{ s.name or '' }}" required style="width:100%"></div>
+  <div><label>Local ID (member number in the Jama'at)</label><input name="local_id" value="{{ s.local_id or '' }}" style="width:100%"></div>
+  <div><label>Father's name</label><input name="father_name" value="{{ s.father_name or '' }}" style="width:100%"></div>
+  <div><label>Jama'at{% if is_admin %} (pick or type a new one){% endif %}</label>
+    {% if is_admin %}
+    <input name="jamaat_name" list="jl" value="{{ s.jamaat or '' }}" style="width:100%">
+    <datalist id="jl">{% for j in jamaats %}<option value="{{ j.name }}">{% endfor %}</datalist>
+    {% else %}
+    <input value="{{ user.jamaat }}" readonly style="width:100%">
+    {% endif %}</div>
+  <div><label>Mobile</label><input name="mobile" value="{{ s.mobile or '' }}" style="width:100%"></div>
+  <div><label>E-mail</label><input name="email" type="email" value="{{ s.email or '' }}" style="width:100%"></div>
+</div>
+<p><label>Address</label><textarea name="address" rows="3">{{ s.address or '' }}</textarea></p>
+<p><label>Notes</label><textarea name="notes" rows="2">{{ s.notes or '' }}</textarea></p>
+<p><label style="display:inline"><input type="checkbox" name="by_hand" {{ 'checked' if s.by_hand }}> Delivered by hand (not by post)</label>
+&nbsp;&nbsp;<label style="display:inline"><input type="checkbox" name="active" {{ 'checked' if s.active }}> Active</label></p>
+<button class="btn">Save</button>
+<a class="btn sec" href="{{ url_for('subscribers') if new else url_for('subscriber_view', sid=s.id) }}">Cancel</a>
+</form>
+{% endblock %}

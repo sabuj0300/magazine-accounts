@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Yearly report{% endblock %}
+{% block body %}
+<h1>Financial year {{ fy_label(y) }} <span class="mut" style="font-size:15px">(1 July {{ y }} – 30 June {{ y+1 }})</span></h1>
+<form class="filters">
+  <div><label>Financial year</label><select name="fy" onchange="this.form.submit()">
+    {% for yy in years %}<option value="{{ yy }}" {{ 'selected' if yy==y }}>{{ fy_label(yy) }}</option>{% endfor %}</select></div>
+  <a class="btn sec" href="{{ url_for('report_yearly', fy=y, format='xlsx') }}">Download payments (Excel)</a>
+  <a class="btn sec" href="#" onclick="window.print();return false">Print</a>
+</form>
+
+<div class="grid" style="margin-bottom:16px">
+  <div class="stat"><b>৳ {{ total|money }}</b><span>Total collected</span></div>
+  <div class="stat"><b>{{ payments|length }}</b><span>Payments</span></div>
+  <div class="stat"><b>{{ by_jamaat|length }}</b><span>Jamaats paying</span></div>
+</div>
+
+<div class="row">
+<div><h2>Month-wise</h2><div class="wrap"><table>
+<tr><th>Month</th><th class="n">Payments</th><th class="n">Amount</th></tr>
+{% for m,n,t in months %}<tr><td>{{ m }}</td><td class="n">{{ n }}</td><td class="n">{{ t|money }}</td></tr>{% endfor %}
+<tr><th>Total</th><th class="n">{{ payments|length }}</th><th class="n">{{ total|money }}</th></tr></table></div></div>
+
+<div><h2>All financial years</h2><div class="wrap"><table>
+<tr><th>FY</th><th class="n">Payments</th><th class="n">Subscribers</th><th class="n">Amount</th></tr>
+{% for yy,n,s,t in summary %}<tr><td><a href="{{ url_for('report_yearly', fy=yy) }}">{{ fy_label(yy) }}</a></td><td class="n">{{ n }}</td><td class="n">{{ s }}</td><td class="n">{{ t|money }}</td></tr>{% endfor %}
+</table></div></div>
+</div>
+
+<h2>Jamaat-wise collection</h2>
+<div class="wrap"><table>
+<tr><th>Jamaat</th><th class="n">Subscribers</th><th class="n">Payments</th><th class="n">Amount</th></tr>
+{% for r in by_jamaat %}<tr><td>{{ r.jamaat }}</td><td class="n">{{ r.subs }}</td><td class="n">{{ r.n }}</td><td class="n">{{ r.total|money }}</td></tr>{% endfor %}
+</table></div>
+
+<h2>All payments in this year</h2>
+<div class="wrap"><table>
+<tr><th>Date</th><th>Receipt</th><th>Book</th><th>ID</th><th>Local ID</th><th>Name</th><th>Jama'at</th><th class="n">Amount</th><th>Valid until</th></tr>
+{% for p in payments %}<tr><td>{{ p.paid_date|dmy }}</td><td>{{ p.receipt_no or '' }}</td><td>{{ p.book_no or '' }}</td><td>{{ p.subscriber_id }}</td><td>{{ p.local_id or '' }}</td>
+<td><a href="{{ url_for('subscriber_view', sid=p.subscriber_id) }}">{{ p.name }}</a></td><td>{{ p.jamaat }}</td><td class="n">{{ p.amount|money }}</td><td>{{ p.expiry_date|dmy }}</td></tr>
+{% else %}<tr><td colspan="9" class="mut">No payments in this year.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

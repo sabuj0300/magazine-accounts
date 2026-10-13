@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sort_select with context %}
+{% block title %}Expiry &amp; renewal{% endblock %}
+{% block body %}
+<h1>Subscription expiry &amp; renewal <span class="mut" style="font-size:15px">({{ rows|length }})</span></h1>
+<form class="filters">
+  <div><label>Show</label><select name="mode" onchange="this.form.submit()">
+    <option value="upcoming" {{ 'selected' if mode=='upcoming' }}>Expiring between dates</option>
+    <option value="expired" {{ 'selected' if mode=='expired' }}>Already expired</option></select></div>
+  {% if mode!='expired' %}
+  <div><label>From</label><input type="date" name="from" value="{{ d_from }}"></div>
+  <div><label>To</label><input type="date" name="to" value="{{ d_to }}"></div>{% endif %}
+  {% if is_admin %}
+  <div><label>Jama'at</label><select name="jamaat"><option value="">All</option>
+    {% for j in jamaats %}<option value="{{ j.id }}" {{ 'selected' if jam==j.id|string }}>{{ j.name }}</option>{% endfor %}</select></div>
+  {% endif %}
+  <div><label>Amount to pay covers</label><select name="pay_to">
+    <option value="fy" {{ 'selected' if pay_to=='fy' }}>Till the upcoming 30 June</option>
+    <option value="next" {{ 'selected' if pay_to=='next' }}>Till 30 June + one more full year (24 issues)</option></select></div>
+  {{ sort_select(sort, dir) }}
+  <button class="btn">Show</button>
+  <a class="btn sec" href="{{ url_for('report_expiry') }}?mode={{ mode }}&from={{ d_from }}&to={{ d_to }}&jamaat={{ jam }}&pay_to={{ pay_to }}&sort={{ sort }}&dir={{ dir }}&format=xlsx">Download Excel</a>
+  <a class="btn sec" href="#" onclick="window.print();return false">Print</a>
+</form>
+<p class="mut">Price: ৳{{ FEE }} for 24 issues = ৳{{ '%.2f'|format(FEE/24) }} per issue.
+<b>Amount to pay</b> = the issues still to be covered, from the day after the expiry date (or from today if already expired)
+up to the <b>30 June that ends that financial year</b>, so after this top-up the subscriber simply pays the round yearly fee of ৳{{ FEE }} from July.</p>
+<div class="wrap"><table>
+<tr><th><a href="{{ sort_url('expiry') }}">Expiry date{{ sort_mark('expiry') }}</a></th>
+<th><a href="{{ sort_url('id') }}">ID{{ sort_mark('id') }}</a></th>
+<th><a href="{{ sort_url('local') }}">Local ID{{ sort_mark('local') }}</a></th>
+<th><a href="{{ sort_url('name') }}">Name{{ sort_mark('name') }}</a></th>
+<th><a href="{{ sort_url('jamaat') }}">Jama'at{{ sort_mark('jamaat') }}</a></th>
+<th>Mobile</th><th>Address</th><th class="n">Issues</th><th class="n">Amount to pay (৳)</th><th>Active until</th><th class="noprint"></th></tr>
+{% for r in rows %}
+<tr><td>{{ r.expiry|dmy }}</td><td>{{ r.id }}</td><td>{{ r.local_id or '' }}</td>
+<td><a href="{{ url_for('subscriber_view', sid=r.id) }}">{{ r.name }}</a></td>
+<td>{{ r.jamaat or '' }}</td><td>{{ r.mobile or '' }}</td><td>{{ r.address or '' }}</td>
+<td class="n">{{ r.issues }}</td><td class="n"><b>{{ r.amt|money }}</b></td><td>{{ r.until|dmy }}</td>
+<td class="noprint">{% if can_pay %}<a class="btn sm" href="{{ url_for('payment_new', sid=r.id) }}">+ Renew</a>{% endif %}</td></tr>
+{% else %}<tr><td colspan="11" class="mut">Nothing found.</td></tr>{% endfor %}
+{% if rows %}<tr><th colspan="7" class="n">Total if all renew</th><th class="n">{{ total_issues }}</th><th class="n">{{ total_amt|money }}</th><th colspan="2"></th></tr>{% endif %}
+</table></div>
+{% endblock %}

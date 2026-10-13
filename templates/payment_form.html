@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+{% block body %}
+<h1>{{ 'Edit payment' if edit else 'New payment' }} — #{{ s.id }} {{ s.name }}</h1>
+<p class="mut">Currently valid until: <b>{{ current_expiry|dmy or 'no previous payment' }}</b>.
+৳{{ FEE }} = 24 issues (1 year), so one issue costs ৳{{ '%.2f'|format(FEE/24) }}.</p>
+
+{% if quotes %}
+<div class="card">
+  <b>Quick amounts</b> <span class="mut">(click one to fill the amount and the valid-until date)</span>
+  <div class="bar" style="margin:10px 0 0">
+    {% for q in quotes %}
+    <button type="button" class="btn sec quote" data-amount="{{ q.amount }}" data-until="{{ q.until }}">
+      {{ 'Top-up' if q.extra==0 else 'Top-up + 1 year' }} till {{ q.until_dmy }} — ৳{{ q.amount }} ({{ q.issues }} issues)</button>
+    {% endfor %}
+    <button type="button" class="btn sec quote" data-amount="{{ FEE }}" data-until="">1 full year — ৳{{ FEE }} (24 issues)</button>
+  </div>
+</div>
+{% endif %}
+
+<form method="post" class="card">
+<div class="row">
+  <div><label>Payment date *</label><input type="date" name="paid_date" id="paid" value="{{ p.paid_date }}" required></div>
+  <div><label>Amount (Taka) *</label><input name="amount" id="amt" value="{{ p.amount }}" required></div>
+  <div><label>Receipt no</label><input name="receipt_no" value="{{ p.receipt_no or '' }}"></div>
+  <div><label>Book no</label><input name="book_no" value="{{ p.book_no or '' }}"></div>
+  <div><label>Subscription valid until *</label><input type="date" name="expiry_date" id="exp" value="{{ p.expiry_date or '' }}" required>
+    <div class="mut" style="font-size:12px" id="hint">Filled automatically from the amount (24 issues per ৳{{ FEE }}); you can change it.</div></div>
+</div>
+<p><label>Note</label><input name="note" value="{{ p.note or '' }}" style="width:100%"></p>
+<button class="btn">Save payment</button>
+<a class="btn sec" href="{{ url_for('subscriber_view', sid=s.id) }}">Cancel</a>
+</form>
+<script>
+const FEE={{ FEE }}, PER_ISSUE=FEE/24, DAYS_PER_ISSUE=365.25/24, cur="{{ current_expiry or '' }}",
+      editing={{ 'true' if edit else 'false' }}, quotes={{ quotes|tojson }};
+const exp=document.getElementById('exp'), amt=document.getElementById('amt'), paid=document.getElementById('paid'),
+      hint=document.getElementById('hint');
+let touched = editing || !!exp.value;
+exp.addEventListener('input',()=>touched=true);
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function calc(){
+  if(touched) return;
+  const a=parseFloat(String(amt.value).replace(/,/g,''));
+  if(!a||!paid.value) return;
+  const q=quotes.find(q=>Math.abs(q.amount-a)<0.005);
+  if(q){ exp.value=q.until; hint.textContent='Matches the quick amount: valid until 30 June.'; return; }
+  const issues=a/PER_ISSUE;
+  let base=new Date(paid.value+'T00:00:00');
+  if(cur){const c=new Date(cur+'T00:00:00'); if(c>=base) base=c;}      // still running: continue after the old expiry
+  base.setDate(base.getDate()+Math.round(issues*DAYS_PER_ISSUE));
+  exp.value=iso(base);
+  hint.textContent=(Math.round(issues*10)/10)+' issues from '+(cur && new Date(cur+'T00:00:00')>=new Date(paid.value+'T00:00:00') ? 'the old expiry date' : 'the payment date')+'; you can change it.';
+}
+document.querySelectorAll('.quote').forEach(b=>b.addEventListener('click',()=>{
+  amt.value=b.dataset.amount;
+  if(b.dataset.until){ exp.value=b.dataset.until; touched=true; hint.textContent='Valid until 30 June.'; }
+  else { exp.value=''; touched=false; calc(); }
+}));
+amt.addEventListener('input',()=>{ if(!editing) touched=false; calc(); });   // changing the amount re-calculates the date
+paid.addEventListener('input',calc); calc();
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% macro sort_select(sort, dir) %}
+<div><label>Sort by</label><select name="sort">
+  {% for k, l in sort_labels %}<option value="{{ k }}" {{ 'selected' if sort == k }}>{{ l }}</option>{% endfor %}
+</select></div>
+<div><label>Order</label><select name="dir">
+  <option value="asc" {{ 'selected' if dir == 'asc' }}>Ascending (A→Z, old→new)</option>
+  <option value="desc" {{ 'selected' if dir == 'desc' }}>Descending (Z→A, new→old)</option>
+</select></div>
+{% endmacro %}

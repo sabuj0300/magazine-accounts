@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block body %}
+<h1>Users</h1>
+<p class="mut">Central <b>Admin</b> users see and manage everything. A <b>Jama'at</b> user can only see, add and edit the members of one Jama'at.</p>
+
+<div class="card">
+<h2 style="margin-top:0">Add a user</h2>
+<form method="post" class="filters" style="margin:0">
+  <div><label>Username</label><input name="username" required></div>
+  <div><label>Password (min 6)</label><input name="password" type="text" required autocomplete="off"></div>
+  <div><label>Role</label><select name="role" id="role" onchange="document.getElementById('jwrap').style.display=this.value=='jamaat'?'block':'none'">
+    <option value="jamaat">Jama'at user (local)</option><option value="admin">Admin (central)</option></select></div>
+  <div id="jwrap"><label>Jama'at</label><select name="jamaat_id"><option value="">— choose —</option>
+    {% for j in jamaats %}<option value="{{ j.id }}">{{ j.name }}</option>{% endfor %}</select></div>
+  <button class="btn">Create user</button>
+</form>
+</div>
+
+<div class="wrap"><table>
+<tr><th>Username</th><th>Role</th><th>Jama'at</th><th>Reset password</th><th></th></tr>
+{% for u in users %}
+<tr><td>{{ u.username }}{% if u.id==user.id %} <span class="mut">(you)</span>{% endif %}</td>
+<td>{{ 'Admin' if u.role=='admin' else "Jama'at user" }}</td><td>{{ u.jamaat or '—' }}</td>
+<td><form method="post" action="{{ url_for('user_password', uid=u.id) }}" style="display:flex;gap:6px">
+  <input name="new_password" placeholder="new password" autocomplete="off" size="14"><button class="btn sm sec">Set</button></form></td>
+<td>{% if u.id!=user.id %}<form method="post" action="{{ url_for('user_delete', uid=u.id) }}" onsubmit="return confirm('Delete user {{ u.username }}?')"><button class="btn sm red">Delete</button></form>{% endif %}</td></tr>
+{% endfor %}
+</table></div>
+{% endblock %}

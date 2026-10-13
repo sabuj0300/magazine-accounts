@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ s.name }}{% endblock %}
+{% block body %}
+<div class="bar noprint">
+  <h1 style="margin:0">#{{ s.id }} {{ s.name }} <span class="tag {{ s.status }}">{{ s.status }}</span></h1>
+  <span style="flex:1"></span>
+  {% if can_pay %}<a class="btn" href="{{ url_for('payment_new', sid=s.id) }}">+ New payment</a>{% endif %}
+  <a class="btn sec" href="{{ url_for('subscriber_edit', sid=s.id) }}">Edit</a>
+  <a class="btn sec" href="#" onclick="window.print();return false">Print</a>
+</div>
+<div class="card row">
+  <div><span class="mut">ID</span><br>{{ s.id }}</div>
+  <div><span class="mut">Local ID</span><br>{{ s.local_id or '—' }}</div>
+  <div><span class="mut">Father's name</span><br>{{ s.father_name or '—' }}</div>
+  <div><span class="mut">Jama'at</span><br>{{ s.jamaat or '—' }}</div>
+  <div><span class="mut">Mobile</span><br>{{ s.mobile or '—' }}</div>
+  <div><span class="mut">E-mail</span><br>{{ s.email or '—' }}</div>
+  <div><span class="mut">Delivery</span><br>{{ 'By hand' if s.by_hand else 'Post' }}</div>
+  <div><span class="mut">Subscription valid until</span><br><b>{{ s.expiry|dmy or '—' }}</b></div>
+  <div><span class="mut">Total paid</span><br><b>৳ {{ s.total_paid|money }}</b> ({{ s.payment_count }} payments)</div>
+  <div style="grid-column:1/-1"><span class="mut">Address</span><br>{{ s.address or '—' }}</div>
+  {% if s.notes %}<div style="grid-column:1/-1"><span class="mut">Notes</span><br>{{ s.notes }}</div>{% endif %}
+</div>
+
+<h2>Payment history (by financial year, July–June)</h2>
+{% for y, pays in by_fy.items() %}
+<div class="wrap" style="margin-bottom:12px"><table>
+<tr><th colspan="6">FY {{ fy_label(y) }} — ৳ {{ pays|sum(attribute='amount')|money }}</th></tr>
+<tr><th>Date</th><th>Receipt no</th><th>Book no</th><th class="n">Amount</th><th>Valid until</th><th class="noprint"></th></tr>
+{% for p in pays %}
+<tr><td>{{ p.paid_date|dmy }}</td><td>{{ p.receipt_no or '' }}</td><td>{{ p.book_no or '' }}</td>
+<td class="n">{{ p.amount|money }}</td><td>{{ p.expiry_date|dmy }}</td>
+<td class="noprint">{% if is_admin %}<a class="btn sm sec" href="{{ url_for('payment_edit', pid=p.id) }}">Edit</a>
+<form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" style="display:inline" onsubmit="return confirm('Delete this payment?')"><button class="btn sm red">Delete</button></form>{% endif %}</td></tr>
+{% endfor %}</table></div>
+{% else %}<p class="mut">No payments recorded yet.</p>{% endfor %}
+{% endblock %}

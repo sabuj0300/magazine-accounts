@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block body %}
+<h1>Dashboard</h1>
+<div class="grid">
+  <div class="stat"><b>{{ counts.get('Valid',0) }}</b><span>Current subscribers</span></div>
+  <div class="stat"><b>{{ in30 }}</b><span>Expiring within 1 month</span></div>
+  <div class="stat"><b>{{ counts.get('Expired',0) }}</b><span>Expired (active records)</span></div>
+  <div class="stat"><b>{{ counts.get('Inactive',0) }}</b><span>Inactive</span></div>
+  <div class="stat"><b>৳ {{ fy_total.s|money }}</b><span>Collected FY {{ fy_label(fy) }} ({{ fy_total.n }} payments)</span></div>
+</div>
+
+<h2>Find a subscriber</h2>
+<form class="filters" action="{{ url_for('subscribers') }}">
+  <div><input name="q" placeholder="Name, ID, Local ID, mobile, address…" size="36" autofocus></div>
+  <button class="btn">Search</button>
+</form>
+
+<h2>Latest payments</h2>
+<div class="wrap"><table>
+<tr><th>Date</th><th>ID</th><th>Local ID</th><th>Name</th><th>Jama'at</th><th>Receipt</th><th class="n">Amount</th><th>Expiry</th></tr>
+{% for p in recent %}
+<tr><td>{{ p.paid_date|dmy }}</td><td>{{ p.subscriber_id }}</td><td>{{ p.local_id or '' }}</td>
+<td><a href="{{ url_for('subscriber_view', sid=p.subscriber_id) }}">{{ p.name }}</a></td>
+<td>{{ p.jamaat or '' }}</td><td>{{ p.receipt_no or '' }}</td><td class="n">{{ p.amount|money }}</td><td>{{ p.expiry_date|dmy }}</td></tr>
+{% else %}<tr><td colspan="8" class="mut">No payments yet.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Import {{ spec.label }}{% endblock %}
+{% block body %}
+<h1>Import {{ spec.label }} from Excel</h1>
+<div class="bar">
+  <a class="btn sec" href="{{ url_for('import_page', kind='subscribers') }}">Subscribers</a>
+  <a class="btn sec" href="{{ url_for('import_page', kind='payments') }}">Payments</a>
+</div>
+<div class="card">
+  <p><b>Step 1.</b> <a class="btn" href="{{ url_for('import_template', kind=kind) }}">⬇ Download Excel template</a>
+     — it has the exact columns, an Example sheet and a How-to-fill sheet.</p>
+  <p><b>Step 2.</b> Copy your data into the first sheet (from row 2), keep the headings, save as .xlsx and upload.
+     The file is accepted only if it has <b>all</b> these columns: <b>{{ spec.cols|map(attribute=1)|join(' | ') }}</b>.</p>
+  <form method="post" enctype="multipart/form-data" class="bar">
+    <input type="file" name="file" accept=".xlsx,.xlsm" required>
+    <button class="btn">Check the file</button>
+  </form>
+  <p class="mut">Nothing is saved until you confirm on the next page. Up to 5000 rows and 5 MB.</p>
+</div>
+<div class="card"><h2 style="margin-top:0">Columns</h2>
+<div class="wrap"><table><tr><th>Column</th><th></th><th>What to write</th><th>Example</th></tr>
+{% for c,req,what,ex in spec.info %}<tr><td><b>{{ c }}</b></td><td>{{ req }}</td><td>{{ what }}</td><td>{{ ex }}</td></tr>{% endfor %}
+</table></div>
+<h2>Rules</h2><ul>{% for r in spec.rules %}<li>{{ r }}</li>{% endfor %}</ul></div>
+{% endblock %}

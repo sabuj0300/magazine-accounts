@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Change password{% endblock %}
+{% block body %}
+<h1>Change password</h1>
+<form method="post" class="card" style="max-width:380px">
+  <p><label>Current password</label><input type="password" name="old_password" required style="width:100%"></p>
+  <p><label>New password (min 6)</label><input type="password" name="new_password" required style="width:100%"></p>
+  <p><label>New password again</label><input type="password" name="new_password2" required style="width:100%"></p>
+  <button class="btn">Change password</button>
+</form>
+{% endblock %}

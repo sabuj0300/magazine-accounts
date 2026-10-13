@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sort_select with context %}
+{% block title %}Subscribers{% endblock %}
+{% block body %}
+<h1>Subscribers <span class="mut" style="font-size:15px">({{ total }}){% if not is_admin %} — {{ user.jamaat }}{% endif %}</span></h1>
+<form class="filters">
+  <div><label>Search</label><input name="q" value="{{ q }}" size="24" placeholder="Name, ID, Local ID, mobile…"></div>
+  {% if is_admin %}
+  <div><label>Jama'at</label><select name="jamaat"><option value="">All</option><option value="none" {{ 'selected' if jam=='none' }}>(No Jama'at)</option>
+    {% for j in jamaats %}<option value="{{ j.id }}" {{ 'selected' if jam==j.id|string }}>{{ j.name }}</option>{% endfor %}</select></div>
+  {% endif %}
+  <div><label>Status</label><select name="status"><option value="">All</option>
+    {% for s in ['Valid','Expired','No payment','Inactive'] %}<option {{ 'selected' if status==s }}>{{ s }}</option>{% endfor %}</select></div>
+  {{ sort_select(sort, dir) }}
+  <button class="btn">Apply</button> <a class="btn sec" href="{{ url_for('subscribers') }}">Reset</a>
+  <a class="btn" href="{{ url_for('subscriber_new') }}">+ New subscriber</a>
+  {% if is_admin %}<a class="btn sec" href="{{ url_for('import_page', kind='subscribers') }}">Import Excel</a>{% endif %}
+</form>
+<div class="wrap"><table>
+<tr><th><a href="{{ sort_url('id') }}">ID{{ sort_mark('id') }}</a></th>
+<th><a href="{{ sort_url('local') }}">Local ID{{ sort_mark('local') }}</a></th>
+<th><a href="{{ sort_url('name') }}">Name{{ sort_mark('name') }}</a></th><th>Father's name</th>
+<th><a href="{{ sort_url('jamaat') }}">Jama'at{{ sort_mark('jamaat') }}</a></th><th>Mobile</th><th>Delivery</th>
+<th><a href="{{ sort_url('expiry') }}">Expiry{{ sort_mark('expiry') }}</a></th><th>Status</th><th></th></tr>
+{% for r in rows %}
+<tr><td>{{ r.id }}</td><td>{{ r.local_id or '' }}</td><td><a href="{{ url_for('subscriber_view', sid=r.id) }}">{{ r.name }}</a></td>
+<td>{{ r.father_name or '' }}</td><td>{{ r.jamaat or '' }}</td><td>{{ r.mobile or '' }}</td>
+<td>{{ 'By hand' if r.by_hand else 'Post' }}</td><td>{{ r.expiry|dmy }}</td>
+<td><span class="tag {{ r.status }}">{{ r.status }}</span></td>
+<td>{% if can_pay %}<a class="btn sm" href="{{ url_for('payment_new', sid=r.id) }}">+ Payment</a>{% else %}<a class="btn sm sec" href="{{ url_for('subscriber_edit', sid=r.id) }}">Edit</a>{% endif %}</td></tr>
+{% else %}<tr><td colspan="10" class="mut">No subscribers found.</td></tr>{% endfor %}
+</table></div>
+<p class="pager">Page {{ page }} of {{ pages }} —
+{% if page>1 %}<a href="{{ page_url(page-1) }}">‹ Prev</a>{% endif %}
+{% if page<pages %}<a href="{{ page_url(page+1) }}">Next ›</a>{% endif %}</p>
+{% endblock %}

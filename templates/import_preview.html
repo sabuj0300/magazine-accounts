@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Check {{ spec.label }} file{% endblock %}
+{% block body %}
+<h1>Check: {{ filename }}</h1>
+<div class="grid">
+  <div class="stat"><b>{{ result.ok }}</b><span>rows will be added</span></div>
+  <div class="stat"><b>{{ result.skipped }}</b><span>rows blocked</span></div>
+  <div class="stat"><b>{{ result.warnings }}</b><span>warnings</span></div>
+  {% if result.amount is defined %}<div class="stat"><b>{{ result.amount|money }}</b><span>total amount</span></div>{% endif %}
+</div>
+{% if extra %}<p class="mut">Extra columns ignored: {{ extra|join(', ') }}</p>{% endif %}
+{% if result.new_jamaats %}<div class="flash warning">New Jama'at(s) will be created: {% for n,c in result.new_jamaats %}{{ n }} ({{ c }}){{ ', ' if not loop.last }}{% endfor %}. Check the spelling.</div>{% endif %}
+<form method="post" action="{{ url_for('import_confirm', kind=kind) }}" class="bar" style="margin-top:12px">
+  <input type="hidden" name="token" value="{{ token }}">
+  {% if result.ok %}<button class="btn">Import {{ result.ok }} {{ spec.label }}</button>{% endif %}
+  <a class="btn sec" href="{{ url_for('import_page', kind=kind) }}">Cancel</a>
+</form>
+<div class="wrap"><table><tr><th>Row</th>{% for k,h in result.columns %}<th>{{ h }}</th>{% endfor %}<th>Result</th></tr>
+{% for r in result.results %}<tr><td>{{ r.row }}</td>{% for k,h in result.columns %}<td>{{ r[k] }}</td>{% endfor %}
+<td>{% if r.status=='ok' %}<span class="tag Valid">Add</span>{% else %}<span class="tag Expired">Blocked</span>{% endif %}
+{% for n in r.notes %}<div class="{{ 'mut' if r.status=='ok' else '' }}" style="font-size:13px">{{ n }}</div>{% endfor %}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}
