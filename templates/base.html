@@ -56,7 +56,7 @@ textarea{width:100%}
 <header class="top noprint">
   <span class="brand">📖 Magazine Accounts</span>
   <span class="sp"></span>
-  <span class="who">{{ user.username }} · {{ 'Admin (all Jama\'ats)' if is_admin else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at' }}</span>
+  <span class="who">{{ user.username }} · {{ 'Admin (all Jama\'ats)' if user.role=='admin' else ('Manager (all Jama\'ats)' if user.role=='manager' else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at') }}</span>
 </header>
 <div class="layout">
 <aside class="side noprint">
@@ -73,7 +73,7 @@ textarea{width:100%}
   {% if is_admin %}<h4>Admin</h4>
   <a href="{{ url_for('import_page', kind='subscribers') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='subscribers' }}">📥 Import subscribers</a>
   <a href="{{ url_for('import_page', kind='payments') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='payments' }}">📥 Import payments</a>
-  <a href="{{ url_for('users_page') }}" class="{{ 'on' if ep=='users_page' }}">🔑 Users</a>{% endif %}
+  {% if is_superadmin %}<a href="{{ url_for('users_page') }}" class="{{ 'on' if ep=='users_page' }}">🔑 Users</a>{% endif %}{% endif %}
   <h4>Account</h4>
   <a href="{{ url_for('account_password') }}" class="{{ 'on' if ep=='account_password' }}">Change password</a>
   <a href="{{ url_for('logout') }}">Logout</a>
