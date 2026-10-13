@@ -24,7 +24,7 @@ FY_START_MONTH = 7      # financial year July - June
 PER_PAGE = 50
 ROUND_TO = 1            # "amount to pay" is rounded UP to a multiple of this (1 = whole Taka, 5 = nearest 5 Taka)
 # Can a local Jama'at user record new payments? (False = only the central admin records money)
-JAMAAT_USERS_CAN_ADD_PAYMENTS = False
+JAMAAT_USERS_CAN_ADD_PAYMENTS = True
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-before-going-live")
@@ -1402,11 +1402,10 @@ def cli_migrate(sqlite_file, force):
             ("subscribers", "id,local_id,name,father_name,jamaat_id,address,mobile,email,by_hand,active,notes,created_at"),
             ("payments", "id,subscriber_id,receipt_no,book_no,paid_date,amount,expiry_date,note,created_at")]
     for table, cols in plan:
-        n = 0
-        for r in src.execute(f"SELECT {cols} FROM {table} ORDER BY id"):
-            dst.execute(f"INSERT INTO {table}({cols}) VALUES ({','.join('?' * len(r))})", tuple(r))
-            n += 1
-        click.echo(f"{table}: {n} rows copied")
+        data = [tuple(r) for r in src.execute(f"SELECT {cols} FROM {table} ORDER BY id")]
+        if data:
+            dst.executemany(f"INSERT INTO {table}({cols}) VALUES ({','.join('?' * len(data[0]))})", data)
+        click.echo(f"{table}: {len(data)} rows copied", nl=True)
     db.sync_sequences(dst)
     dst.commit()
     click.echo("Done.")
