@@ -11,8 +11,8 @@ services:
     runtime: python
     plan: starter              # about $7 / month; use "free" to try it first (it sleeps when idle)
     buildCommand: pip install -r requirements.txt
-    startCommand: python -c "import db, app; db.init_db(); app.ensure_admin()" && waitress-serve --host=0.0.0.0 --port=$PORT app:app
-    healthCheckPath: /login
+    startCommand: python start.py
+    healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.5

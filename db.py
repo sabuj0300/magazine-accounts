@@ -208,7 +208,7 @@ class PgConnection:
 def connect(path=None):
     if IS_PG and path is None:
         import psycopg
-        return PgConnection(psycopg.connect(DATABASE_URL, row_factory=_row_factory))
+        return PgConnection(psycopg.connect(DATABASE_URL, row_factory=_row_factory, connect_timeout=15))
     con = sqlite3.connect(path or DB_PATH)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")

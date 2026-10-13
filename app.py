@@ -1365,6 +1365,11 @@ def cli_import(mdb_file, force):
     click.echo(import_access.run(mdb_file, force=force))
 
 
+@app.route("/healthz")
+def healthz():
+    return "ok"
+
+
 def ensure_admin():
     """Online start-up helper: if there is no user yet and ADMIN_USERNAME / ADMIN_PASSWORD are set, create that admin."""
     user, pw = os.environ.get("ADMIN_USERNAME"), os.environ.get("ADMIN_PASSWORD")
