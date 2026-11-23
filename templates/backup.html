@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Backup{% endblock %}
+{% block body %}
+<h1>Backup</h1>
+<p class="mut">A backup is one zip file with a complete database copy (<code>subscribers.db</code>) and an Excel file of all subscribers and payments.</p>
+
+<div class="card">
+<h2 style="margin-top:0">Google Drive (automatic)</h2>
+{% if st.configured %}
+  <p>✅ Connected. A backup is sent <b>every day after {{ '%02d'|format(st.hour) }}:00</b> (Bangladesh time) to the Drive folder
+  <b>{{ st.folder }}</b>. The newest {{ st.keep }} files are kept.</p>
+{% else %}
+  <p>⚠️ Not set up yet. Follow <b>GOOGLE_DRIVE_BACKUP.md</b> and add GDRIVE_CLIENT_ID, GDRIVE_CLIENT_SECRET and GDRIVE_REFRESH_TOKEN in the Render Environment tab.</p>
+{% endif %}
+<p><b>Last successful backup:</b> {{ st.last_ok or 'never' }}<br>
+<b>Last attempt:</b> {{ st.last_attempt or '—' }}<br>
+<b>Result:</b> {{ st.last_result or '—' }}</p>
+<form method="post" action="{{ url_for('backup_run') }}"><button class="btn" {{ '' if st.configured else 'disabled' }}>Back up to Google Drive now</button></form>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">Download a backup</h2>
+<p class="mut">Saves a fresh backup zip on this computer.</p>
+<a class="btn" href="{{ url_for('backup_download') }}">Download backup</a>
+</div>
+{% endblock %}
