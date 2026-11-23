@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Jama'at names{% endblock %}
+{% block body %}
+<h1>Jama'at names</h1>
+<p class="mut">Only the Admin can add or rename a Jama'at. Everybody else can only pick from this list.</p>
+
+<div class="card">
+<h2 style="margin-top:0">Add a new Jama'at</h2>
+<form method="post" class="filters" style="margin:0">
+  <div><label>Jama'at name</label><input name="name" required style="min-width:260px"></div>
+  <button class="btn">Add</button>
+</form>
+</div>
+
+<div class="wrap"><table>
+<tr><th>Jama'at name (rename here)</th><th class="n">Subscribers</th><th class="n">Users</th></tr>
+{% for r in rows %}
+<tr><td><form method="post" action="{{ url_for('jamaat_rename', jid=r.id) }}" style="display:flex;gap:6px">
+  <input name="name" value="{{ r.name }}" required style="min-width:240px"><button class="btn sm sec">Save name</button></form></td>
+<td class="n">{{ r.subs }}</td><td class="n">{{ r.users }}</td></tr>
+{% endfor %}</table></div>
+{% endblock %}
