@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block login %}
-<div class="card" style="max-width:360px;margin:60px auto">
-  <h1>📖 Magazine Accounts</h1>
-  <form method="post">
+<div class="card" style="max-width:600px;margin:30px auto;padding:20px 24px 24px">
+  <img class="loginbanner" src="{{ url_for('static', filename='the-ahmadi-banner.png') }}" alt="The Ahmadi - Fortnightly - Since 1922">
+  <form method="post" style="max-width:340px;margin:6px auto 0">
+    <h1 style="font-size:20px">Sign in</h1>
     <p><label>Username</label><input name="username" required autofocus style="width:100%"></p>
     <p><label>Password</label><input name="password" type="password" required style="width:100%"></p>
     <button class="btn">Sign in</button>

@@ -1,22 +1,35 @@
-{% macro ico(n) -%}<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{% if n=='home' %}<path d="M3 11.5 12 3.5l9 8"/><path d="M5.5 10v10.5h4.5v-6h4v6h4.5V10"/>{% elif n=='users' %}<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17.2 14c2.4.2 4.3 2.1 4.3 4.5"/>{% elif n=='userplus' %}<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20.5c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><path d="M19 7.5v7M15.5 11h7"/>{% elif n=='list' %}<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M8.5 12h7M8.5 16h7"/>{% elif n=='mail' %}<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7"/>{% elif n=='clock' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>{% elif n=='calendar' %}<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>{% elif n=='import' %}<path d="M12 3v12M7.5 10.5 12 15l4.5-4.5"/><path d="M4 16v3.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V16"/>{% elif n=='cash' %}<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 9.5v.01M17.5 14.5v.01"/>{% elif n=='key' %}<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3M14 9l2 2"/>{% elif n=='cloud' %}<path d="M7 18.5a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.9 8.6 4.9 4.9 0 0 1 17.5 18.5z"/>{% elif n=='lock' %}<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>{% elif n=='logout' %}<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="m9 8-4 4 4 4M5 12h10"/>{% endif %}</svg>{%- endmacro %}
+{% macro ico(n) -%}<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">{% if n=='home' %}<path d="M3 11.5 12 3.5l9 8"/><path d="M5.5 10v10.5h4.5v-6h4v6h4.5V10"/>{% elif n=='users' %}<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17.2 14c2.4.2 4.3 2.1 4.3 4.5"/>{% elif n=='userplus' %}<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20.5c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><path d="M19 7.5v7M15.5 11h7"/>{% elif n=='list' %}<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M8.5 12h7M8.5 16h7"/>{% elif n=='mail' %}<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7"/>{% elif n=='clock' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>{% elif n=='calendar' %}<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>{% elif n=='import' %}<path d="M12 3v12M7.5 10.5 12 15l4.5-4.5"/><path d="M4 16v3.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V16"/>{% elif n=='cash' %}<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 9.5v.01M17.5 14.5v.01"/>{% elif n=='key' %}<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3M14 9l2 2"/>{% elif n=='cloud' %}<path d="M7 18.5a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.9 8.6 4.9 4.9 0 0 1 17.5 18.5z"/>{% elif n=='lock' %}<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>{% elif n=='logout' %}<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="m9 8-4 4 4 4M5 12h10"/>{% elif n=='menu' %}<path d="M4 6.5h16M4 12h16M4 17.5h16"/>{% elif n=='user' %}<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c0-4 3.4-7 7.5-7s7.5 3 7.5 7"/>{% elif n=='chev' %}<path d="m6 9 6 6 6-6"/>{% endif %}</svg>{%- endmacro %}
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Subscribers{% endblock %} – Magazine Accounts</title>
+<title>{% block title %}Subscribers{% endblock %} – The Ahmadi</title>
 <style>
 :root{--g:#1f6f43;--g2:#e8f3ec;--line:#d9dee3;--bg:#f6f8f7;--txt:#1d2733;--mut:#66727f;--red:#b3261e;--amb:#8a5a00}
 *{box-sizing:border-box}
 body{margin:0;font:15px/1.45 system-ui,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--txt)}
-header.top{background:var(--g);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-header.top .brand{font-weight:700;font-size:17px}
+header.top{background:#1f6f43;color:#fff;padding:8px 18px;display:flex;align-items:center;gap:12px;position:relative;z-index:20}
+header.top .brand{font-weight:700;font-size:19px;letter-spacing:.02em}
 header.top .sp{flex:1}
-header.top .who{font-size:13px;background:rgba(255,255,255,.16);padding:4px 12px;border-radius:99px}
+header.top svg.ic{width:20px;height:20px;flex:none;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tbtn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;list-style:none}
+.tbtn:hover{background:rgba(255,255,255,.24)}
+.tbtn.sq{border-radius:8px;padding:7px 8px}
+details.um{position:relative}
+details.um>summary::-webkit-details-marker{display:none}
+details.um .menu{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px}
+details.um .menu .who{padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:13px;color:var(--mut)}
+details.um .menu .who b{display:block;color:var(--txt);font-size:14px}
+details.um .menu a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;color:var(--txt);text-decoration:none}
+details.um .menu a:hover{background:var(--g2)}
+details.um .menu svg.ic{stroke:#1f6f43}
+.loginbanner{display:block;width:100%;max-width:560px;height:auto;margin:0 auto 6px}
 .layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;max-width:1500px;margin:0 auto;padding:18px 16px;align-items:start}
 main{min-width:0}
 main.solo{max-width:1200px;margin:22px auto;padding:0 16px}
-aside.side{--olive:#5a6b2b;--olive-hi:#6d8034;--olive-on:#46551f;position:sticky;top:12px;background:var(--olive);border-radius:10px;padding:10px 8px 8px;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+aside.side{--olive:#0f4a2a;--olive-hi:#1a6238;--olive-on:#082f1a;position:sticky;top:12px;max-height:calc(100vh - 80px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.45) transparent;background:var(--olive);border-radius:10px;padding:10px 8px 8px;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+aside.side::-webkit-scrollbar{width:8px}aside.side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.4);border-radius:8px}aside.side::-webkit-scrollbar-track{background:transparent}
 aside.side h4{margin:14px 12px 5px;font-size:11px;text-transform:uppercase;color:rgba(255,255,255,.68);letter-spacing:.08em}
 aside.side h4:first-child{margin-top:4px}
 aside.side a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:7px;color:#fff;text-decoration:none;border-left:3px solid transparent}
@@ -50,16 +63,25 @@ textarea{width:100%}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .mut{color:var(--mut)} .right{text-align:right} .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .pager a{margin-right:6px} .grp td{background:var(--g2);font-weight:700}
-@media(max-width:860px){.layout{grid-template-columns:1fr}aside.side{order:-1;position:static}}
+body.nomenu .layout{grid-template-columns:minmax(0,1fr)}body.nomenu aside.side{display:none}
+@media(max-width:860px){.layout{grid-template-columns:1fr}aside.side{order:-1;position:static;max-height:70vh}}
 @media print{header.top,aside.side,.noprint,form.filters{display:none!important}body{background:#fff}.layout{display:block;padding:0}.wrap{border:0}}
 </style>
 </head>
 <body>
 {% if user %}
 <header class="top noprint">
-  <span class="brand">📖 Magazine Accounts</span>
+  <button type="button" class="tbtn sq" id="menuToggle" title="Show / hide menu" aria-label="Show or hide menu">{{ ico('menu') }}</button>
+  <span class="brand">The Ahmadi</span>
   <span class="sp"></span>
-  <span class="who">{{ user.username }} · {{ 'Admin (all Jama\'ats)' if user.role=='admin' else ('Manager (all Jama\'ats)' if user.role=='manager' else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at') }}</span>
+  <details class="um" id="userMenu">
+    <summary class="tbtn">{{ ico('user') }}<span>{{ user.username }}</span>{{ ico('chev') }}</summary>
+    <div class="menu">
+      <div class="who"><b>{{ user.username }}</b>{{ 'Admin (all Jama\'ats)' if user.role=='admin' else ('Manager (all Jama\'ats)' if user.role=='manager' else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at') }}</div>
+      <a href="{{ url_for('account_password') }}">{{ ico('lock') }}<span>Change password</span></a>
+      <a href="{{ url_for('logout') }}">{{ ico('logout') }}<span>Logout</span></a>
+    </div>
+  </details>
 </header>
 <div class="layout">
 <aside class="side noprint">
@@ -78,9 +100,6 @@ textarea{width:100%}
   <a href="{{ url_for('import_page', kind='payments') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='payments' }}">{{ ico('cash') }}<span>Import payments</span></a>
   {% if is_superadmin %}<a href="{{ url_for('users_page') }}" class="{{ 'on' if ep=='users_page' }}">{{ ico('key') }}<span>Users</span></a>
   <a href="{{ url_for('backup_page') }}" class="{{ 'on' if ep=='backup_page' }}">{{ ico('cloud') }}<span>Backup</span></a>{% endif %}{% endif %}
-  <h4>Account</h4>
-  <a href="{{ url_for('account_password') }}" class="{{ 'on' if ep=='account_password' }}">{{ ico('lock') }}<span>Change password</span></a>
-  <a href="{{ url_for('logout') }}">{{ ico('logout') }}<span>Logout</span></a>
   <div class="ver">Version {{ app_version }}</div>
 </aside>
 <main>
@@ -94,5 +113,19 @@ textarea{width:100%}
 {% block solo %}{% block login %}{% endblock %}{% endblock %}
 </main>
 {% endif %}
+<script>
+(function(){
+  var b=document.body, KEY="menuHidden";
+  try{ if(localStorage.getItem(KEY)==="1") b.classList.add("nomenu"); }catch(e){}
+  var t=document.getElementById("menuToggle");
+  if(t) t.addEventListener("click",function(){
+    b.classList.toggle("nomenu");
+    try{ localStorage.setItem(KEY,b.classList.contains("nomenu")?"1":"0"); }catch(e){}
+  });
+  var um=document.getElementById("userMenu");
+  document.addEventListener("click",function(e){ if(um && um.open && !um.contains(e.target)) um.open=false; });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && um) um.open=false; });
+})();
+</script>
 </body>
 </html>
