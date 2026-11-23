@@ -4,6 +4,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<meta name="theme-color" content="#6b1f30">
 <title>{% block title %}Subscribers{% endblock %} – The Ahmadi</title>
 <style>
 :root{--g:#1f6f43;--g2:#e8f3ec;--line:#d9dee3;--bg:#f6f8f7;--txt:#1d2733;--mut:#66727f;--red:#b3261e;--amb:#8a5a00}
@@ -24,6 +29,7 @@ details.um .menu .who b{display:block;color:var(--txt);font-size:14px}
 details.um .menu a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;color:var(--txt);text-decoration:none}
 details.um .menu a:hover{background:var(--g2)}
 details.um .menu svg.ic{stroke:#1f6f43}
+body.login{background:#0a2351;min-height:100vh}
 .loginbanner{display:block;width:100%;max-width:560px;height:auto;margin:0 auto 6px}
 .layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;max-width:1500px;margin:0 auto;padding:18px 16px;align-items:start}
 main{min-width:0}
@@ -68,7 +74,7 @@ body.nomenu .layout{grid-template-columns:minmax(0,1fr)}body.nomenu aside.side{d
 @media print{header.top,aside.side,.noprint,form.filters{display:none!important}body{background:#fff}.layout{display:block;padding:0}.wrap{border:0}}
 </style>
 </head>
-<body>
+<body class="{{ 'login' if not user }}">
 {% if user %}
 <header class="top noprint">
   <button type="button" class="tbtn sq" id="menuToggle" title="Show / hide menu" aria-label="Show or hide menu">{{ ico('menu') }}</button>
