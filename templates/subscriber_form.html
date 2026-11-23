@@ -7,11 +7,8 @@
   <div><label>Name *</label><input name="name" value="{{ s.name or '' }}" required style="width:100%"></div>
   <div><label>Local ID (member number in the Jama'at)</label><input name="local_id" value="{{ s.local_id or '' }}" style="width:100%"></div>
   <div><label>Father's name</label><input name="father_name" value="{{ s.father_name or '' }}" style="width:100%"></div>
-  <div><label>Jama'at{% if is_superadmin %} (pick or type a new one){% endif %}</label>
-    {% if is_superadmin %}
-    <input name="jamaat_name" list="jl" value="{{ s.jamaat or '' }}" style="width:100%">
-    <datalist id="jl">{% for j in jamaats %}<option value="{{ j.name }}">{% endfor %}</datalist>
-    {% elif is_admin %}
+  <div><label>Jama'at{% if is_admin %} (pick from the list){% endif %}</label>
+    {% if is_admin %}
     <select name="jamaat_name" style="width:100%"><option value="">— choose —</option>
       {% for j in jamaats %}<option value="{{ j.name }}" {{ 'selected' if j.name==s.jamaat }}>{{ j.name }}</option>{% endfor %}</select>
     {% else %}
