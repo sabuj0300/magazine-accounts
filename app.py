@@ -142,6 +142,10 @@ def _seen_ago(ts):
         return None
 
 
+VIEWER_BLOCKED = {"subscriber_new", "subscriber_edit", "payment_new", "payment_edit", "payment_delete",
+                  "import_page", "import_confirm", "import_template"}
+
+
 @app.before_request
 def load_user():
     g.user = None
@@ -172,11 +176,21 @@ def load_user():
                         (now_bd().strftime("%Y-%m-%d %H:%M:%S"), u["id"]))
             con.commit()
     g.user = u
+    if u["role"] == "viewer":                 # read-only role: block every way of changing data
+        ep = request.endpoint or ""
+        if ep in VIEWER_BLOCKED or (request.method not in ("GET", "HEAD", "OPTIONS")
+                                    and ep not in ("login", "logout", "account_password", "static")):
+            abort(403)
 
 
 def is_admin():
-    """Full access to all Jama'ats and all data: central Admin and Manager."""
-    return bool(g.get("user") and g.user["role"] in ("admin", "manager"))
+    """Sees all Jama'ats and all data: central Admin, Manager and the read-only Author (viewer)."""
+    return bool(g.get("user") and g.user["role"] in ("admin", "manager", "viewer"))
+
+
+def is_viewer():
+    """Author: may only VIEW (all data, all reports); can never add, edit, delete or import."""
+    return bool(g.get("user") and g.user["role"] == "viewer")
 
 
 def is_superadmin():
@@ -185,6 +199,8 @@ def is_superadmin():
 
 
 def can_pay():
+    if is_viewer():
+        return False
     return is_admin() or (g.get("user") is not None and JAMAAT_USERS_CAN_ADD_PAYMENTS)
 
 
@@ -202,7 +218,7 @@ def admin_required(f):
     def w(*a, **k):
         if g.user is None:
             return redirect(url_for("login", next=request.path))
-        if not is_admin():
+        if not is_admin() or is_viewer():
             abort(403)
         return f(*a, **k)
     return w
@@ -289,7 +305,7 @@ def page_url(n):
 def inject():
     return dict(fy_label=fy_label, FEE=FEE_PER_YEAR, today=today().isoformat(),
                 current_fy=fy_of(today()), user=g.get("user"), is_admin=is_admin(), is_superadmin=is_superadmin(),
-                can_pay=can_pay(), sort_url=sort_url, sort_mark=sort_mark, page_url=page_url,
+                can_pay=can_pay(), can_edit=not is_viewer(), sort_url=sort_url, sort_mark=sort_mark, page_url=page_url,
                 sort_labels=SORT_LABELS, app_version=APP_VERSION)
 
 
@@ -444,7 +460,7 @@ def users_page():
             err = "Username is required."
         elif len(pw) < 6:
             err = "Password must be at least 6 characters."
-        elif role not in ("admin", "manager", "jamaat"):
+        elif role not in ("admin", "manager", "viewer", "jamaat"):
             err = "Choose a role."
         elif role == "jamaat" and not (jam.isdigit() and con.execute(
                 "SELECT 1 FROM jamaats WHERE id=?", (int(jam),)).fetchone()):
@@ -1465,7 +1481,7 @@ def cli_init():
 
 @app.cli.command("create-user")
 @click.argument("username")
-@click.option("--role", type=click.Choice(["admin", "manager", "jamaat"]), default="admin", show_default=True)
+@click.option("--role", type=click.Choice(["admin", "manager", "viewer", "jamaat"]), default="admin", show_default=True)
 @click.option("--jamaat", "jamaat_name", default=None, help="Jama'at name (required for role jamaat)")
 @click.password_option()
 def cli_user(username, role, jamaat_name, password):
