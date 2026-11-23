@@ -610,16 +610,44 @@ def _sub_form_data(existing=None):
             if d["jamaat"] else None
         if known:
             d["jamaat_id"] = known["id"]
-        elif d["jamaat"] and not is_superadmin():          # a NEW Jama'at name: central Admin only
+        elif d["jamaat"]:                                   # typing a new name is never allowed here
             d["jamaat_id"] = None
             d["jam_error"] = (f"The Jama'at \"{d['jamaat']}\" is not in the list. Please pick an existing Jama'at "
-                              f"- only the Admin can add a new Jama'at.")
+                              f"(the Admin adds new Jama'at names in the menu: Jama'at names).")
         else:
-            d["jamaat_id"] = get_or_create_jamaat(d["jamaat"])
+            d["jamaat_id"] = None
     else:                                   # local users can never move a member to another Jama'at
         d["jamaat_id"] = g.user["jamaat_id"]
         d["jamaat"] = g.user["jamaat"]
     return d
+
+
+def _mob_key(m):
+    d = re.sub(r"\D", "", m or "")
+    return d[-10:] if len(d) >= 10 else d          # +8801712345678 and 01712345678 are the same number
+
+
+def duplicate_member(name, mobile, exclude=None):
+    """Another subscriber with the same name AND the same mobile number (in any Jama'at), or None."""
+    key = _mob_key(mobile)
+    name = " ".join((name or "").split())
+    if not name or len(key) < 6:
+        return None
+    for c in db.get_db().execute(
+            """SELECT s.id, s.name, s.mobile, j.name AS jamaat FROM subscribers s
+               LEFT JOIN jamaats j ON j.id=s.jamaat_id WHERE lower(s.name)=lower(?) AND s.id IS NOT ?""",
+            (name, exclude)).fetchall():
+        if _mob_key(c["mobile"]) == key:
+            return c
+    return None
+
+
+def dup_message(dup):
+    if is_admin():
+        return (f"Duplicate blocked: {dup['name']} with mobile {dup['mobile']} is already in the system "
+                f"as #{dup['id']} ({dup['jamaat'] or 'no Jama\'at'}). Open that subscriber instead of adding again.")
+    return (f"Duplicate blocked: a subscriber with the same name and mobile number is already in the system "
+            f"(in another Jama'at or yours). Please contact the office.")
 
 
 def local_id_conflict(jamaat_id, local_id, exclude=None):
@@ -641,8 +669,13 @@ def subscriber_new():
         elif not d["name"]:
             err = "Name is required."
         else:
+            dup = duplicate_member(d["name"], d["mobile"])
             c = local_id_conflict(d["jamaat_id"], d["local_id"])
-            if c:
+            if dup:
+                err = dup_message(dup)
+            elif is_admin() and not d["jamaat_id"]:
+                err = "Please choose the Jama'at from the list."
+            elif c:
                 err = f"Local ID {d['local_id']} is already used in this Jama'at by #{c['id']} {c['name']}."
         if err:
             flash(err, "danger")
@@ -677,7 +710,10 @@ def subscriber_edit(sid):
             err = "Name is required."
         else:
             c = local_id_conflict(d["jamaat_id"], d["local_id"], exclude=sid)
-            if c:
+            dup = duplicate_member(d["name"], d["mobile"], exclude=sid)
+            if dup:
+                err = dup_message(dup)
+            elif c:
                 err = f"Local ID {d['local_id']} is already used in this Jama'at by #{c['id']} {c['name']}."
         if err:
             flash(err, "danger")
