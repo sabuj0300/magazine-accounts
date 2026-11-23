@@ -606,7 +606,16 @@ def _sub_form_data(existing=None):
         active=1 if f.get("active") else 0, notes=f.get("notes", "").strip() or None)
     if is_admin():
         d["jamaat"] = f.get("jamaat_name", "").strip()
-        d["jamaat_id"] = get_or_create_jamaat(d["jamaat"])
+        known = db.get_db().execute("SELECT id FROM jamaats WHERE lower(name)=lower(?)", (d["jamaat"],)).fetchone() \
+            if d["jamaat"] else None
+        if known:
+            d["jamaat_id"] = known["id"]
+        elif d["jamaat"] and not is_superadmin():          # a NEW Jama'at name: central Admin only
+            d["jamaat_id"] = None
+            d["jam_error"] = (f"The Jama'at \"{d['jamaat']}\" is not in the list. Please pick an existing Jama'at "
+                              f"- only the Admin can add a new Jama'at.")
+        else:
+            d["jamaat_id"] = get_or_create_jamaat(d["jamaat"])
     else:                                   # local users can never move a member to another Jama'at
         d["jamaat_id"] = g.user["jamaat_id"]
         d["jamaat"] = g.user["jamaat"]
@@ -626,8 +635,10 @@ def local_id_conflict(jamaat_id, local_id, exclude=None):
 def subscriber_new():
     if request.method == "POST":
         d = _sub_form_data()
-        err = None
-        if not d["name"]:
+        err = d.pop("jam_error", None)
+        if err:
+            pass
+        elif not d["name"]:
             err = "Name is required."
         else:
             c = local_id_conflict(d["jamaat_id"], d["local_id"])
@@ -659,8 +670,10 @@ def subscriber_edit(sid):
         d = _sub_form_data()
         if not is_admin():
             d["jamaat_id"] = s["jamaat_id"]
-        err = None
-        if not d["name"]:
+        err = d.pop("jam_error", None)
+        if err:
+            pass
+        elif not d["name"]:
             err = "Name is required."
         else:
             c = local_id_conflict(d["jamaat_id"], d["local_id"], exclude=sid)
@@ -1172,6 +1185,9 @@ def process_subscribers(rows, commit=False):
                 continue
         # ---- which Jama'at
         jid = jam_ids.get(jname.lower())
+        if jid is None and not is_superadmin():
+            block(f"Jama'at \"{jname}\" does not exist - only the Admin can add a new Jama'at")
+            continue
         if jid is None:
             e2 = new_jamaats.setdefault(jname.lower(), [jname, 0])
             e2[1] += 1
@@ -1536,6 +1552,49 @@ def ensure_admin():
         con.commit()
         print(f"First admin '{user}' created.")
     con.close()
+
+
+# ---------------------------------------------------------------- Jama'at names (Admin only)
+@app.route("/jamaats", methods=["GET", "POST"])
+@superadmin_required
+def jamaats_page():
+    con = db.get_db()
+    if request.method == "POST":
+        name = " ".join(request.form.get("name", "").split())
+        if not name:
+            flash("Type the Jama'at name.", "danger")
+        elif con.execute("SELECT 1 FROM jamaats WHERE lower(name)=lower(?)", (name,)).fetchone():
+            flash(f"\"{name}\" already exists.", "danger")
+        else:
+            con.execute("INSERT INTO jamaats(name) VALUES (?)", (name,))
+            con.commit()
+            flash(f"Jama'at \"{name}\" added.", "success")
+        return redirect(url_for("jamaats_page"))
+    rows = con.execute("""SELECT j.id, j.name,
+                                 (SELECT COUNT(*) FROM subscribers s WHERE s.jamaat_id=j.id) AS subs,
+                                 (SELECT COUNT(*) FROM users u WHERE u.jamaat_id=j.id) AS users
+                          FROM jamaats j ORDER BY lower(j.name)""").fetchall()
+    return render_template("jamaats.html", rows=rows)
+
+
+@app.route("/jamaats/<int:jid>/rename", methods=["POST"])
+@superadmin_required
+def jamaat_rename(jid):
+    con = db.get_db()
+    name = " ".join(request.form.get("name", "").split())
+    cur = con.execute("SELECT name FROM jamaats WHERE id=?", (jid,)).fetchone()
+    if not cur:
+        abort(404)
+    if not name:
+        flash("The Jama'at name cannot be empty.", "danger")
+    elif con.execute("SELECT 1 FROM jamaats WHERE lower(name)=lower(?) AND id<>?", (name, jid)).fetchone():
+        flash(f"Another Jama'at is already named \"{name}\".", "danger")
+    else:
+        con.execute("UPDATE jamaats SET name=? WHERE id=?", (name, jid))
+        con.commit()
+        flash(f"Renamed \"{cur['name']}\" to \"{name}\". All its members and users follow automatically.", "success")
+    return redirect(url_for("jamaats_page"))
+
 
 
 # ---------------------------------------------------------------- backup (Google Drive + download)
