@@ -16,6 +16,7 @@ from flask import (Flask, Response, abort, flash, g, redirect, render_template,
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import db
+import gdrive_backup
 
 # ------------------------------------------------------------------ settings
 FEE_PER_YEAR = 250      # Taka per year = 24 issues  ->  250/24 Taka per issue
@@ -27,6 +28,27 @@ ROUND_TO = 1            # "amount to pay" is rounded UP to a multiple of this (1
 JAMAAT_USERS_CAN_ADD_PAYMENTS = True
 SINGLE_DEVICE_LOGIN = True      # a user can be signed in on ONE device at a time
 IDLE_MINUTES = 30               # no activity for this long -> signed out, and another device may log in
+
+# Optional overrides from a settings file (the desktop program keeps one next to the database)
+try:
+    import json as _json
+    with open(os.environ.get("MAGAZINE_SETTINGS", ""), encoding="utf-8") as _f:
+        _cfg = _json.load(_f)
+    _fee = float(_cfg.get("fee_per_year", FEE_PER_YEAR))
+    FEE_PER_YEAR = int(_fee) if _fee.is_integer() else _fee
+    ISSUES_PER_YEAR = int(_cfg.get("issues_per_year", ISSUES_PER_YEAR))
+    ROUND_TO = int(_cfg.get("round_to", ROUND_TO))
+    PER_PAGE = int(_cfg.get("rows_per_page", PER_PAGE))
+    JAMAAT_USERS_CAN_ADD_PAYMENTS = bool(_cfg.get("jamaat_users_can_add_payments", JAMAAT_USERS_CAN_ADD_PAYMENTS))
+    SINGLE_DEVICE_LOGIN = bool(_cfg.get("single_device_login", SINGLE_DEVICE_LOGIN))
+    IDLE_MINUTES = int(_cfg.get("idle_logout_minutes", IDLE_MINUTES))
+except (OSError, ValueError, TypeError):
+    pass
+
+try:
+    from version import VERSION as APP_VERSION
+except ImportError:
+    APP_VERSION = "dev"
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-before-going-live")
@@ -123,6 +145,7 @@ def _seen_ago(ts):
 @app.before_request
 def load_user():
     g.user = None
+    gdrive_backup.tick()          # starts the daily Google Drive backup in the background when it is due
     uid = session.get("uid")
     if not uid:
         return
@@ -267,7 +290,7 @@ def inject():
     return dict(fy_label=fy_label, FEE=FEE_PER_YEAR, today=today().isoformat(),
                 current_fy=fy_of(today()), user=g.get("user"), is_admin=is_admin(), is_superadmin=is_superadmin(),
                 can_pay=can_pay(), sort_url=sort_url, sort_mark=sort_mark, page_url=page_url,
-                sort_labels=SORT_LABELS)
+                sort_labels=SORT_LABELS, app_version=APP_VERSION)
 
 
 # ------------------------------------------------------------------ misc helpers
@@ -318,8 +341,36 @@ def jam_filter_value():
 
 
 # ------------------------------------------------------------------ login / account
+def _setup_open():
+    """The very first start of the desktop program: no user exists yet, so the first Admin is created in the browser."""
+    return bool(os.environ.get("ALLOW_SETUP")) and \
+        db.get_db().execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"] == 0
+
+
+@app.route("/setup", methods=["GET", "POST"])
+def setup():
+    if not _setup_open():
+        abort(404)
+    if request.method == "POST":
+        username, pw = request.form.get("username", "").strip(), request.form.get("password", "")
+        if not username or len(pw) < 6:
+            flash("Enter a username and a password of at least 6 characters.", "danger")
+        elif pw != request.form.get("password2", ""):
+            flash("The two passwords do not match.", "danger")
+        else:
+            con = db.get_db()
+            con.execute("INSERT INTO users(username,password_hash,role) VALUES (?,?,'admin')",
+                        (username, generate_password_hash(pw)))
+            con.commit()
+            flash("Admin created. Please log in.", "success")
+            return redirect(url_for("login"))
+    return render_template("setup.html")
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "GET" and _setup_open():
+        return redirect(url_for("setup"))
     if request.method == "POST":
         con = db.get_db()
         u = con.execute("SELECT * FROM users WHERE lower(username)=lower(?)",
@@ -1469,6 +1520,43 @@ def ensure_admin():
         con.commit()
         print(f"First admin '{user}' created.")
     con.close()
+
+
+# ---------------------------------------------------------------- backup (Google Drive + download)
+@app.route("/backup")
+@superadmin_required
+def backup_page():
+    return render_template("backup.html", st=gdrive_backup.status())
+
+
+@app.route("/backup/run", methods=["POST"])
+@superadmin_required
+def backup_run():
+    ok, msg = gdrive_backup.run_backup()
+    flash(msg, "success" if ok else "danger")
+    return redirect(url_for("backup_page"))
+
+
+@app.route("/backup/download")
+@superadmin_required
+def backup_download():
+    data, name, _ = gdrive_backup.build_zip()
+    return Response(data, mimetype="application/zip",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@app.cli.command("export-sqlite")
+@click.argument("sqlite_file", type=click.Path())
+def cli_export(sqlite_file):
+    """Copy everything from the online PostgreSQL database into a SQLite file (to work on one PC only)."""
+    if not db.IS_PG:
+        raise click.ClickException("Set DATABASE_URL to the PostgreSQL address first.")
+    if os.path.exists(sqlite_file):
+        raise click.ClickException(f"{sqlite_file} already exists - choose a new file name.")
+    src = db.connect()
+    for table, n in gdrive_backup.copy_to_sqlite(src, sqlite_file).items():
+        click.echo(f"{table}: {n} rows copied")
+    click.echo(f"Done. Copy {sqlite_file} to subscribers.db to use it on this PC.")
 
 
 @app.cli.command("migrate-sqlite")

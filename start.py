@@ -8,6 +8,7 @@ import sys
 import time
 
 import db
+import gdrive_backup
 from app import app, ensure_admin
 
 
@@ -26,6 +27,7 @@ def prepare(tries=30):
 
 if __name__ == "__main__":
     prepare()
+    gdrive_backup.start_scheduler()
     from waitress import serve
     port = int(os.environ.get("PORT", 10000))
     print(f"Serving on port {port}", flush=True)
