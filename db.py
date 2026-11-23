@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS app_meta (
+    k TEXT PRIMARY KEY,
+    v TEXT
+);
+
 CREATE INDEX IF NOT EXISTS ix_pay_sub ON payments(subscriber_id);
 CREATE INDEX IF NOT EXISTS ix_pay_date ON payments(paid_date);
 CREATE INDEX IF NOT EXISTS ix_sub_jamaat ON subscribers(jamaat_id);
@@ -126,6 +131,10 @@ CREATE TABLE IF NOT EXISTS payments (
     expiry_date TEXT NOT NULL,
     note TEXT,
     created_at TEXT DEFAULT to_char(now() AT TIME ZONE 'Asia/Dhaka', 'YYYY-MM-DD HH24:MI:SS')
+);
+CREATE TABLE IF NOT EXISTS app_meta (
+    k TEXT PRIMARY KEY,
+    v TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_pay_sub ON payments(subscriber_id);
 CREATE INDEX IF NOT EXISTS ix_pay_date ON payments(paid_date);
@@ -219,7 +228,8 @@ class PgConnection:
 def connect(path=None):
     if IS_PG and path is None:
         import psycopg
-        return PgConnection(psycopg.connect(DATABASE_URL, row_factory=_row_factory, connect_timeout=15))
+        return PgConnection(psycopg.connect(DATABASE_URL, row_factory=_row_factory, connect_timeout=30,
+                                           prepare_threshold=None))   # also safe with Neon's pooled address
     con = sqlite3.connect(path or DB_PATH)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
