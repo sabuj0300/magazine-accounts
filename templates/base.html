@@ -83,7 +83,7 @@ body.nomenu .layout{grid-template-columns:minmax(0,1fr)}body.nomenu aside.side{d
   <details class="um" id="userMenu">
     <summary class="tbtn">{{ ico('user') }}<span>{{ user.username }}</span>{{ ico('chev') }}</summary>
     <div class="menu">
-      <div class="who"><b>{{ user.username }}</b>{{ 'Admin (all Jama\'ats)' if user.role=='admin' else ('Manager (all Jama\'ats)' if user.role=='manager' else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at') }}</div>
+      <div class="who"><b>{{ user.username }}</b>{{ 'Admin (all Jama\'ats)' if user.role=='admin' else ('Manager (all Jama\'ats)' if user.role=='manager' else ('Author (view only, all Jama\'ats)' if user.role=='viewer' else (user.jamaat or 'no Jama\'at') ~ ' Jama\'at')) }}</div>
       <a href="{{ url_for('account_password') }}">{{ ico('lock') }}<span>Change password</span></a>
       <a href="{{ url_for('logout') }}">{{ ico('logout') }}<span>Logout</span></a>
     </div>
@@ -95,13 +95,13 @@ body.nomenu .layout{grid-template-columns:minmax(0,1fr)}body.nomenu aside.side{d
   <h4>Main</h4>
   <a href="{{ url_for('dashboard') }}" class="{{ 'on' if ep=='dashboard' }}">{{ ico('home') }}<span>Dashboard</span></a>
   <a href="{{ url_for('subscribers') }}" class="{{ 'on' if ep in ('subscribers','subscriber_view','subscriber_edit','payment_new','payment_edit') }}">{{ ico('users') }}<span>Subscribers</span></a>
-  <a href="{{ url_for('subscriber_new') }}" class="{{ 'on' if ep=='subscriber_new' }}">{{ ico('userplus') }}<span>New subscriber</span></a>
+  {% if can_edit %}<a href="{{ url_for('subscriber_new') }}" class="{{ 'on' if ep=='subscriber_new' }}">{{ ico('userplus') }}<span>New subscriber</span></a>{% endif %}
   <h4>Reports</h4>
   <a href="{{ url_for('report_jamaat') }}" class="{{ 'on' if ep=='report_jamaat' }}">{{ ico('list') }}<span>Jama'at-wise list</span></a>
   <a href="{{ url_for('report_postal') }}" class="{{ 'on' if ep=='report_postal' }}">{{ ico('mail') }}<span>Postal addresses</span></a>
   <a href="{{ url_for('report_expiry') }}" class="{{ 'on' if ep=='report_expiry' }}">{{ ico('clock') }}<span>Expiry &amp; renewal</span></a>
   <a href="{{ url_for('report_yearly') }}" class="{{ 'on' if ep=='report_yearly' }}">{{ ico('calendar') }}<span>Yearly (Jul–Jun)</span></a>
-  {% if is_admin %}<h4>Admin</h4>
+  {% if is_admin and can_edit %}<h4>Admin</h4>
   <a href="{{ url_for('import_page', kind='subscribers') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='subscribers' }}">{{ ico('import') }}<span>Import subscribers</span></a>
   <a href="{{ url_for('import_page', kind='payments') }}" class="{{ 'on' if request.view_args and request.view_args.get('kind')=='payments' }}">{{ ico('cash') }}<span>Import payments</span></a>
   {% if is_superadmin %}<a href="{{ url_for('users_page') }}" class="{{ 'on' if ep=='users_page' }}">{{ ico('key') }}<span>Users</span></a>

@@ -13,8 +13,8 @@
     {% for s in ['Valid','Expired','No payment','Inactive'] %}<option {{ 'selected' if status==s }}>{{ s }}</option>{% endfor %}</select></div>
   {{ sort_select(sort, dir) }}
   <button class="btn">Apply</button> <a class="btn sec" href="{{ url_for('subscribers') }}">Reset</a>
-  <a class="btn" href="{{ url_for('subscriber_new') }}">+ New subscriber</a>
-  {% if is_admin %}<a class="btn sec" href="{{ url_for('import_page', kind='subscribers') }}">Import Excel</a>{% endif %}
+  {% if can_edit %}<a class="btn" href="{{ url_for('subscriber_new') }}">+ New subscriber</a>{% endif %}
+  {% if is_admin and can_edit %}<a class="btn sec" href="{{ url_for('import_page', kind='subscribers') }}">Import Excel</a>{% endif %}
 </form>
 <div class="wrap"><table>
 <tr><th><a href="{{ sort_url('id') }}">ID{{ sort_mark('id') }}</a></th>
@@ -27,7 +27,7 @@
 <td>{{ r.father_name or '' }}</td><td>{{ r.jamaat or '' }}</td><td>{{ r.mobile or '' }}</td>
 <td>{{ 'By hand' if r.by_hand else 'Post' }}</td><td>{{ r.expiry|dmy }}</td>
 <td><span class="tag {{ r.status }}">{{ r.status }}</span></td>
-<td>{% if can_pay %}<a class="btn sm" href="{{ url_for('payment_new', sid=r.id) }}">+ Payment</a>{% else %}<a class="btn sm sec" href="{{ url_for('subscriber_edit', sid=r.id) }}">Edit</a>{% endif %}</td></tr>
+<td>{% if can_pay %}<a class="btn sm" href="{{ url_for('payment_new', sid=r.id) }}">+ Payment</a>{% elif can_edit %}<a class="btn sm sec" href="{{ url_for('subscriber_edit', sid=r.id) }}">Edit</a>{% endif %}</td></tr>
 {% else %}<tr><td colspan="10" class="mut">No subscribers found.</td></tr>{% endfor %}
 </table></div>
 <p class="pager">Page {{ page }} of {{ pages }} —

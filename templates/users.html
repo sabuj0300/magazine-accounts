@@ -10,7 +10,7 @@
   <div><label>Username</label><input name="username" required></div>
   <div><label>Password (min 6)</label><input name="password" type="text" required autocomplete="off"></div>
   <div><label>Role</label><select name="role" id="role" onchange="document.getElementById('jwrap').style.display=this.value=='jamaat'?'block':'none'">
-    <option value="jamaat">Jama'at user (local)</option><option value="manager">Manager (all data, no user management)</option><option value="admin">Admin (central, full)</option></select></div>
+    <option value="jamaat">Jama'at user (local)</option><option value="manager">Manager (all data, no user management)</option><option value="viewer">Author (view only, all data)</option><option value="admin">Admin (central, full)</option></select></div>
   <div id="jwrap"><label>Jama'at</label><select name="jamaat_id"><option value="">— choose —</option>
     {% for j in jamaats %}<option value="{{ j.id }}">{{ j.name }}</option>{% endfor %}</select></div>
   <button class="btn">Create user</button>
@@ -21,7 +21,7 @@
 <tr><th>Username</th><th>Role</th><th>Jama'at</th><th>Device</th><th>Reset password</th><th></th></tr>
 {% for u in users %}
 <tr><td>{{ u.username }}{% if u.id==user.id %} <span class="mut">(you)</span>{% endif %}</td>
-<td>{{ 'Admin' if u.role=='admin' else ('Manager' if u.role=='manager' else "Jama'at user") }}</td><td>{{ u.jamaat or '—' }}</td>
+<td>{{ 'Admin' if u.role=='admin' else ('Manager' if u.role=='manager' else ('Author (view only)' if u.role=='viewer' else "Jama'at user")) }}</td><td>{{ u.jamaat or '—' }}</td>
 <td>{% if u.id in online %}<span class="tag Valid">Logged in</span>
   {% if u.id!=user.id %}<form method="post" action="{{ url_for('user_signout', uid=u.id) }}" style="display:inline" onsubmit="return confirm('Sign {{ u.username }} out of the device now?')"><button class="btn sm sec">Sign out</button></form>{% endif %}
   {% else %}<span class="mut">—</span>{% endif %}</td>

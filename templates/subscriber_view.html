@@ -5,7 +5,7 @@
   <h1 style="margin:0">#{{ s.id }} {{ s.name }} <span class="tag {{ s.status }}">{{ s.status }}</span></h1>
   <span style="flex:1"></span>
   {% if can_pay %}<a class="btn" href="{{ url_for('payment_new', sid=s.id) }}">+ New payment</a>{% endif %}
-  <a class="btn sec" href="{{ url_for('subscriber_edit', sid=s.id) }}">Edit</a>
+  {% if can_edit %}<a class="btn sec" href="{{ url_for('subscriber_edit', sid=s.id) }}">Edit</a>{% endif %}
   <a class="btn sec" href="#" onclick="window.print();return false">Print</a>
 </div>
 <div class="card row">
@@ -30,7 +30,7 @@
 {% for p in pays %}
 <tr><td>{{ p.paid_date|dmy }}</td><td>{{ p.receipt_no or '' }}</td><td>{{ p.book_no or '' }}</td>
 <td class="n">{{ p.amount|money }}</td><td>{{ p.expiry_date|dmy }}</td>
-<td class="noprint">{% if is_admin %}<a class="btn sm sec" href="{{ url_for('payment_edit', pid=p.id) }}">Edit</a>
+<td class="noprint">{% if is_admin and can_edit %}<a class="btn sm sec" href="{{ url_for('payment_edit', pid=p.id) }}">Edit</a>
 <form method="post" action="{{ url_for('payment_delete', pid=p.id) }}" style="display:inline" onsubmit="return confirm('Delete this payment?')"><button class="btn sm red">Delete</button></form>{% endif %}</td></tr>
 {% endfor %}</table></div>
 {% else %}<p class="mut">No payments recorded yet.</p>{% endfor %}
