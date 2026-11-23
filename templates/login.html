@@ -1,14 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block login %}
-<style>.logincard label{color:#10314d;font-weight:600}</style>
+{% set admin_mail = 'sabuj03@gmail.com' %}
+<style>
+.logincard label{color:#10314d;font-weight:600}
+.logincard .btn.navy{background:#0a2351;color:#fff;border:0}
+.logincard .btn.navy:hover{background:#12337a}
+.logincard details.forgot{margin-top:16px;font-size:14px;color:#10314d}
+.logincard details.forgot summary{cursor:pointer;font-weight:600;color:#0a2351;text-decoration:underline;list-style:none}
+.logincard details.forgot summary::-webkit-details-marker{display:none}
+.logincard details.forgot .box{margin-top:10px;background:rgba(255,255,255,.55);border:1px solid #0a2351;border-radius:8px;padding:12px 14px;line-height:1.5}
+.logincard details.forgot a.mail{display:inline-block;margin-top:6px;color:#0a2351;font-weight:700}
+</style>
 <div class="card logincard" style="max-width:600px;margin:30px auto;padding:20px 24px 24px;background:#5bb3e6;border-color:#3f9bd1">
   <img class="loginbanner" src="{{ url_for('static', filename='the-ahmadi-banner.png') }}" alt="The Ahmadi - Fortnightly - Since 1922">
   <form method="post" style="max-width:340px;margin:20px auto 0">
     <h1 style="font-size:20px">Sign in</h1>
     <p><label>Username</label><input name="username" required autofocus style="width:100%"></p>
     <p><label>Password</label><input name="password" type="password" required style="width:100%"></p>
-    <button class="btn">Sign in</button>
+    <button class="btn navy">Sign in</button>
+
+    <details class="forgot">
+      <summary>Forgot username or password?</summary>
+      <div class="box">
+        Please contact the admin. He will first <b>verify who you are</b> (your name, Jama'at and mobile number)
+        and then give you your username or set a new password.<br>
+        <a class="mail" href="mailto:{{ admin_mail }}?subject=The%20Ahmadi%20-%20forgot%20username%20or%20password&body=Name%3A%20%0AJama'at%3A%20%0AMobile%20number%3A%20%0AI%20forgot%3A%20username%20%2F%20password">&#9993; {{ admin_mail }}</a>
+      </div>
+    </details>
   </form>
 </div>
 {% endblock %}
